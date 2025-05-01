@@ -1,0 +1,151 @@
+openapi: 3.0.3
+info:
+  title: Profile Service API
+  description: Manages pet profiles and medical records
+  version: 1.1.0
+servers:
+  - url: http://profile-service:8080/api/v1
+
+paths:
+  /pets:
+    post:
+      tags: [pets]
+      summary: Register new pet
+      operationId: createPet
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PetProfile'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PetProfile'
+
+    get:
+      tags: [pets]
+      summary: List all pets
+      operationId: listPets
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PetProfile'
+
+  /pets/{petId}:
+    get:
+      tags: [pets]
+      summary: Get pet by ID
+      parameters:
+        - $ref: '#/components/parameters/petId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PetProfile'
+
+  /pets/{petId}/medical-card:
+    get:
+      tags: [medical]
+      summary: Get medical card
+      parameters:
+        - $ref: '#/components/parameters/petId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MedicalCard'
+
+    put:
+      tags: [medical]
+      summary: Update medical card
+      parameters:
+        - $ref: '#/components/parameters/petId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MedicalCard'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MedicalCard'
+
+components:
+  parameters:
+    petId:
+      name: petId
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Unique pet identifier
+
+  schemas:
+    PetProfile:
+      type: object
+      required: [name, species]
+      properties:
+        id:
+          type: string
+          readOnly: true
+        name:
+          type: string
+          example: "Rex"
+        species:
+          type: string
+          enum: [dog, cat, bird, reptile, rodent, other]
+          example: "dog"
+        breed:
+          type: string
+          example: "Labrador"
+        age:
+          type: integer
+          example: 3
+        chipId:
+          type: string
+          example: "A123BC456D"
+
+    MedicalCard:
+      type: object
+      properties:
+        vaccinations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Vaccination'
+        allergies:
+          type: array
+          items:
+            type: string
+          example: ["pollen", "chicken"]
+
+    Vaccination:
+      type: object
+      properties:
+        type:
+          type: string
+          example: "Rabies"
+        date:
+          type: string
+          format: date
+          example: "2023-01-15"
+        validUntil:
+          type: string
+          format: date
+          example: "2024-01-15"

@@ -1,0 +1,152 @@
+openapi: 3.0.3
+info:
+  title: Appointment Service API
+  description: Handles appointment scheduling
+  version: 1.1.0
+servers:
+  - url: http://appointment-service:8080/api/v1
+
+paths:
+  /appointments:
+    post:
+      tags: [appointments]
+      summary: Book appointment
+      operationId: bookAppointment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AppointmentRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Appointment'
+
+    get:
+      tags: [appointments]
+      summary: List appointments
+      parameters:
+        - name: date
+          in: query
+          schema:
+            type: string
+            format: date
+          description: Filter by date (YYYY-MM-DD)
+        - name: petId
+          in: query
+          schema:
+            type: string
+          description: Filter by pet ID
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Appointment'
+
+  /appointments/{appointmentId}:
+    delete:
+      tags: [appointments]
+      summary: Cancel appointment
+      parameters:
+        - name: appointmentId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: No Content
+
+  /slots/available:
+    get:
+      tags: [slots]
+      summary: Check available slots
+      parameters:
+        - name: date
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+          description: Date to check (YYYY-MM-DD)
+        - name: doctorId
+          in: query
+          schema:
+            type: string
+          description: Filter by doctor ID
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TimeSlot'
+
+components:
+  schemas:
+    AppointmentRequest:
+      type: object
+      required: [petId, doctorId, datetime]
+      properties:
+        petId:
+          type: string
+          example: "pet123"
+        doctorId:
+          type: string
+          example: "doc456"
+        datetime:
+          type: string
+          format: date-time
+          example: "2023-12-15T14:30:00Z"
+        reason:
+          type: string
+          example: "Annual checkup"
+
+    Appointment:
+      type: object
+      properties:
+        id:
+          type: string
+          readOnly: true
+          example: "app789"
+        petId:
+          type: string
+        doctorId:
+          type: string
+        datetime:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [booked, completed, canceled]
+          default: "booked"
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+
+    TimeSlot:
+      type: object
+      properties:
+        start:
+          type: string
+          format: date-time
+          example: "2023-12-15T09:00:00Z"
+        end:
+          type: string
+          format: date-time
+          example: "2023-12-15T09:30:00Z"
+        doctorId:
+          type: string
+        available:
+          type: boolean
