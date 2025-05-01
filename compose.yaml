@@ -1,0 +1,38 @@
+version: '3.9'
+services:
+  gateway:
+    build: ./gateway-service
+    ports:
+      - "8080:8080"
+    depends_on:
+      - profile
+      - appointment
+      - lab
+      - emergency
+
+  profile:
+    build: ./profile-service
+    ports:
+      - "8081:8081"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+
+  appointment:
+    build: ./appointment-service
+    ports:
+      - "8082:8082"
+
+  lab:
+    build: ./lab-service
+    ports:
+      - "8083:8083"
+
+  emergency:
+    build: ./emergency-service
+    ports:
+      - "8084:8084"
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
