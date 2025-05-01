@@ -1,4 +1,4 @@
-import { getPets } from './app.js';
+import { getPets } from "./app.js";
 
 document.addEventListener("DOMContentLoaded", async () => {
     try {
