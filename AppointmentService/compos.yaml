@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: 'postgres:latest'
+    shm_size: 128mb
+    environment:
+      - 'POSTGRES_DB=bookingSlots'
+      - 'POSTGRES_PASSWORD=password'
+      - 'POSTGRES_USER=postgres'
+    ports:
+      - '5433:5432'
+
+  redis:
+    image: redis:7.2
+    container_name: redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
