@@ -22,8 +22,12 @@ public class MedCardController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<MedCard> getCardById(@PathVariable String id) {
+    public ResponseEntity<MedCard> getCard(@PathVariable String id) {
         return cardService.getCardById(id);
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<MedCard> putCard(@PathVariable String id, @RequestBody MedCard card) {
+        return cardService.updateCard(id, card);
+    }
 }

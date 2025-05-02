@@ -1,6 +1,7 @@
 package org.vetclinic.profileservice.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -17,22 +18,52 @@ public class MedCardService {
 
     private final MedCardRepo medCardRepo;
 
-    public List<MedCard> getAllCards(){
+    public List<MedCard> getAllCards() {
         return medCardRepo.findAll();
     }
 
-    public ResponseEntity<MedCard> getCardById(String id){
+    public ResponseEntity<MedCard> getCardById(String id) {
         var card = medCardRepo.findByPetId(id);
-        if (card == null){
-            return ResponseEntity.status(HttpStatusCode.valueOf(404)).build();
+        if (card == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+        return ResponseEntity.ok(card);
+    }
+
+    public ResponseEntity<MedCard> createCard(String petId) {
+        if (medCardRepo.findByPetId(petId) != null) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(null);
+        }
+        MedCard medCard = MedCard.builder()
+                .petId(petId)
+                .vaccinations(List.of())
+                .allergies(List.of())
+                .diseases(List.of())
+                .build();
+        MedCard savedCard = medCardRepo.save(medCard);
+        return ResponseEntity.ok(savedCard);
+    }
+
+    public ResponseEntity<MedCard> updateCard(String petId, MedCard updatedCard) {
+        var target = medCardRepo.findByPetId(petId);
+        if (target == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
 
-        return new ResponseEntity<>(card, HttpStatusCode.valueOf(200));
+        target.setVaccinations(updatedCard.getVaccinations());
+        target.setAllergies(updatedCard.getAllergies());
+        target.setDiseases(updatedCard.getDiseases());
+
+        MedCard savedCard = medCardRepo.save(target);
+        return ResponseEntity.ok(savedCard);
     }
 
-    public MedCard putCard(MedCard card) {
-        card.setPetId(UUID.randomUUID().toString());
-        return medCardRepo.save(card);
+    public ResponseEntity<Void> deleteCard(String petId) {
+        var card = medCardRepo.findByPetId(petId);
+        if (card == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+        medCardRepo.delete(card);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
-
 }

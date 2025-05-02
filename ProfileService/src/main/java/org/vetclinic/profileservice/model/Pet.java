@@ -5,9 +5,9 @@ import lombok.Setter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-@Document
 @Getter
 @Setter
+@Document(collection = "pets")
 public class Pet {
 
     @Id
@@ -18,7 +18,4 @@ public class Pet {
     private int age;
 
     private String kind;
-
-    private int chip;
-
 }

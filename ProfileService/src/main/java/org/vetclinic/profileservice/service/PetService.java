@@ -1,6 +1,7 @@
 package org.vetclinic.profileservice.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.transaction.annotation.Transactional;
 import org.vetclinic.profileservice.model.Pet;
 import org.vetclinic.profileservice.repository.PetRepo;
 import org.springframework.http.HttpStatusCode;
@@ -8,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -15,6 +17,7 @@ import java.util.UUID;
 public class PetService {
 
     private final PetRepo petRepo;
+    private final MedCardService medCardService;
 
     public List<Pet> getAllPets(){
         return petRepo.findAll();
@@ -29,8 +32,22 @@ public class PetService {
         return new ResponseEntity<>(pet, HttpStatusCode.valueOf(200));
     }
 
-    public Pet putPet(Pet pet) {
+    public Pet savePet(Pet pet) {
         pet.setPetId(UUID.randomUUID().toString());
         return petRepo.save(pet);
+    }
+
+    public Pet updatePet(String id, Pet pet) {
+        petRepo.findById(id);
+        return petRepo.save(pet);
+    }
+
+    @Transactional
+    public void deletePet(String id) {
+        Pet pet = petRepo.findByPetId(id);
+        if (pet != null) {
+            medCardService.deleteCard(id);
+            petRepo.deleteById(id);
+        }
     }
 }
