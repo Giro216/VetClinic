@@ -38,7 +38,7 @@ const testAppointments = [
     {
         "id": 123,
         "petId": 456,
-        "doctorId": 789,
+        "doctorName": "S. O. Sasd",
         "datetime": "2025-05-15T14:30:00+07:00",
         "status": "CONFIRMED",
         "createdAt": "2025-05-01T10:15:30+07:00"
@@ -68,6 +68,8 @@ export async function getAppointments() {
     });
 }
 
+
 document.addEventListener("DOMContentLoaded", async () => {
     await renderNavBar();
 });
+

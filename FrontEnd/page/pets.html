@@ -11,10 +11,49 @@
         </div>
         <div class="container mt-4">
             <h2>Мои питомцы</h2>
-            <button id="addPetBtn" class="btn btn-primary mb-3">Добавить питомца</button>
+            <button id="addPetBtn" class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addPetModal">Добавить питомца</button>
             
             <div id="petsList" class="row">
                 <!-- JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно добавления питомца -->
+    <div class="modal fade" id="addPetModal" tabindex="-1" aria-labelledby="addPetModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addPetModalLabel">Добавить нового питомца</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addPetForm">
+                        <div class="mb-3">
+                            <label for="petName" class="form-label">Имя питомца</label>
+                            <input type="text" class="form-control" id="petName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="petKind" class="form-label">Вид животного</label>
+                            <select class="form-select" id="petKind" required>
+                                <option value="" selected disabled>Выберите вид</option>
+                                <option value="Собака">Собака</option>
+                                <option value="Кошка">Кошка</option>
+                                <option value="Попугай">Попугай</option>
+                                <option value="Хомяк">Хомяк</option>
+                                <option value="Другое">Другое</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="petAge" class="form-label">Возраст (лет)</label>
+                            <input type="number" class="form-control" id="petAge" min="0" max="50" step="0.5">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="button" class="btn btn-primary" id="savePetBtn">Сохранить</button>
+                </div>
             </div>
         </div>
     </div>
