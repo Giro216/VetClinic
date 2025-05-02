@@ -3,45 +3,56 @@ import { renderNavBar } from "./utils/navBar.js";
 // Тестовые данные питомцев
 const testPets = [
     {
-        id: '1',
-        name: 'Барсик',
-        species: 'cat',
-        breed: 'Британский',
-        age: 3,
-        chipId: 'CHIP123',
-        medicalCard: {
-          vaccinations: [
-            { type: 'Комплексная', date: '2023-05-10', validUntil: '2024-05-10' }
-          ],
-          allergies: ['пыльца']
-        }
-    },
+        "petId": "1234567890abcdef",
+        "name": "Барсик",
+        "age": 3,
+        "kind": "Кот"
+    }
+];
+const testMedCard = [
     {
-        id: '2',
-        name: "Шарик",
-        species: "dog",
-        breed: "Дворняга",
-        age: 5
+        "petId": "1234567890abcdef",
+        "vaccinations": [
+            {
+                "date": "2024-03-10",
+                "type": "Rabies"
+            },
+            {
+                "date": "2024-04-01",
+                "type": "Distemper"
+            }
+        ],
+        "allergies": [
+            "Pollen",
+            "Chicken"
+        ],
+        "diseases": [
+            "Diabetes",
+            "Arthritis"
+        ]
     }
 ];
 
 // Тестовые данные записей
 const testAppointments = [
     {
-        id: '1',
-        date: '2023-12-15T14:30:00',
-        doctor: 'Иванова А.П.',
-        service: 'Ежегодный осмотр',
-        petName: "Шпулька"
-    },
-    {
-        id: '2',
-        date: '2023-12-16T10:00:00',
-        doctor: 'Петров В.С.',
-        service: 'Вакцинация',
-        petName: 'Шершень'
+        "id": 123,
+        "petId": 456,
+        "doctorId": 789,
+        "datetime": "2025-05-15T14:30:00+07:00",
+        "status": "CONFIRMED",
+        "createdAt": "2025-05-01T10:15:30+07:00"
     }
 ];
+
+export async function getMedicalCard(petId) {
+    return new Promise(resolve => {
+        setTimeout(() => {
+            const card = testMedCard.find(card => card.petId === petId);
+            resolve(card || null);
+        }, 500);
+    });
+}
 
 // Функции для работы с питомцами
 export async function getPets() {
@@ -54,14 +65,6 @@ export async function getPets() {
 export async function getAppointments() {
     return new Promise(resolve => {
         setTimeout(() => resolve(testAppointments), 500);
-    });
-}
-
-export async function getAppointmentById(id) {
-    return new Promise(resolve => {
-        setTimeout(() => {
-            resolve(testAppointments.find(app => app.id === id));
-        }, 500);
     });
 }
 
