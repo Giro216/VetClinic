@@ -14,13 +14,13 @@ import java.time.OffsetDateTime;
 public class Appointment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int appointmentId;
+    private Long Id;
 
     @Column(nullable = false)
-    private int petId;
+    private Long petId;
 
     @Column(nullable = false)
-    private int doctorId;
+    private String doctorName;
 
     @OneToOne
     @JoinColumn(name = "slot_id", unique = true)
@@ -33,5 +33,8 @@ public class Appointment {
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private OffsetDateTime createdAt;
+
+    @Column()
+    private String reason;
 
 }
