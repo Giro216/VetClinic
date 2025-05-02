@@ -1,20 +1,17 @@
 package org.vetclinic.appointmentservice.model;
 
 import jakarta.persistence.*;
-import lombok.Data;
-import lombok.RequiredArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.SoftDelete;
-import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.OffsetDateTime;
 
-@Data
-@RequiredArgsConstructor
-@SoftDelete
+@Entity
+@Getter
+@Setter
+@NoArgsConstructor
 @Table(name = "Appointment")
 public class Appointment {
-    // TODO добавить в модель слоты со временем и статусом для определенного доктора
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int appointmentId;
@@ -25,16 +22,16 @@ public class Appointment {
     @Column(nullable = false)
     private int doctorId;
 
-    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-    @Column(nullable = false)
-    private OffsetDateTime dateTime;
+    @OneToOne
+    @JoinColumn(name = "slot_id", unique = true)
+    private TimeSlot slot;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private AppointmentStatus status = AppointmentStatus.BOOKED;
 
-
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private OffsetDateTime createdAt;
+
 }
