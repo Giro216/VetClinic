@@ -4,9 +4,9 @@ import java.io.Serializable;
 import java.time.OffsetDateTime;
 
 public record AppointmentResponseDto(
-     Integer id,
-     Integer petId,
-     Integer doctorId,
+     Long id,
+     Long petId,
+     String doctorName,
      OffsetDateTime datetime,
      String status,
      OffsetDateTime createdAt) implements Serializable {}
