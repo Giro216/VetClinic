@@ -1,3 +1,5 @@
+import { renderNavBar } from "./navBar.js";
+
 const testPets = [
     {
         id: 1,
@@ -21,3 +23,8 @@ export async function getPets() {
         setTimeout(() => resolve(testPets), 500);
     });
 }
+
+
+document.addEventListener("DOMContentLoaded", async () => {
+    await renderNavBar();
+});
