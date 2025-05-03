@@ -1,35 +1,88 @@
 <!DOCTYPE html>
 <html lang="ru">
-
 <head>
-    <meta charset="UTF-8" />
+    <meta charset="UTF-8">
     <title>Vet Clinic</title>
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-SgOJa3DmI69IUzQ2PVdRZhwQ+dy64/BUtbMJw1MZ8t5HZApcHrRKUc4W0kG879m7" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .slots-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 10px;
+        }
+        .slot-btn {
+            width: 100%;
+            padding: 10px;
+            text-align: center;
+        }
+    </style>
 </head>
-
 <body>
-    
     <div class="container">
-        <div id="nav-bar-main">
-        </div>
+        <div id="nav-bar-main"></div>
         <div class="container mt-4">
             <h2>Мои записи</h2>
-            <button id="addPetBtn" class="btn btn-primary mb-3">Записаться на прием</button>
-            
-            <div id="appointmentsList" class="row">
-                <!-- JS -->
+            <button id="addAppointmentBtn" class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#appointmentModal">
+                Записаться на прием
+            </button>
+            <div id="appointmentsList" class="row"></div>
+        </div>
+    </div>
+
+    <!-- Модальное окно записи (исправленная версия) -->
+    <div class="modal fade" id="appointmentModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Запись на прием</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="appointmentForm">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Питомец</label>
+                                <select class="form-select" id="petSelect" required>
+                                    <option value="" disabled selected>Выберите питомца</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Врач</label>
+                                <select class="form-select" id="doctorSelect" required>
+                                    <option value="" disabled selected>Выберите врача</option>
+                                    <option value="1">Иванов И.И. (Терапевт)</option>
+                                    <option value="2">Petrova P.P. (Хирург)</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Дата приема</label>
+                            <input type="date" class="form-control" id="appointmentDate" 
+                                   min="${new Date().toISOString().split('T')[0]}">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Причина визита</label>
+                            <input type="text" class="form-control" id="appointmentReason" required>
+                        </div>
+                        
+                        <div id="slotsContainer">
+                            <h5>Доступное время:</h5>
+                            <div class="slots-grid" id="slotsGrid"></div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+                    <button type="button" class="btn btn-primary" id="confirmAppointmentBtn" disabled>Подтвердить запись</button>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js" integrity="sha384-k6d4wzSIapyDyv1kpU366/PK5hCdSbCRGRCMv+eplOQJWyd1fbcAu9OCUj5zNLiq" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.min.js" integrity="sha384-VQqxDN0EQCkWoxt/0vsQvZswzTHUVOImccYmSyhJTp7kGtPed0Qcx8rK9h9YEgx+" crossorigin="anonymous"></script>
- 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js"></script>
     <script src="../js/app.js" type="module"></script>
     <script src="../js/page/appointments.js" type="module"></script>
 </body>
-
 </html>
