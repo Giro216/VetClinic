@@ -1,0 +1,399 @@
+openapi: 3.0.3
+info:
+  title: PetCare Recommendation Service API
+  version: 1.0.0
+servers:
+  - url: http://recommendation-service:8080/api/v1
+  - url: http://localhost:8080/api/v1
+
+paths:
+  /users/{userId}/pets:
+    post:
+      tags: [ Pet ]
+      summary: Управление данные о питомце
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserPetCreateRequestDto'
+      responses:
+        '201':
+          description: Питомец добавлен
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserPetResponseDto"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /pets/{petId}/care-tips:
+    get:
+      tags: [ Care Tips ]
+      summary: Получить персонализированные советы по уходу для питомца
+      parameters:
+        - name: petId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Список советов по уходу
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CareTipResponseDto'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /pets/{petId}/food-recommendations:
+    get:
+      tags: [ Food Recommendations ]
+      summary: Получить рекомендации по корму для конкретного питомца
+      parameters:
+        - name: petId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Список подходящих кормов
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FoodRecommendationResponseDto'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /users/{userId}/reminders:
+    get:
+      tags: [ Reminders ]
+      summary: Получить напоминания об уходе для питомцев пользователя
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: status
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/ReminderStatus'
+      responses:
+        '200':
+          description: Список напоминаний
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReminderResponseDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    post:
+      tags: [ Reminders ]
+      summary: Создать напоминание об уходе
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReminderCreationRequestDto'
+      responses:
+        '201':
+          description: Напоминание создано
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReminderResponseDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /users/{userId}/reminders/{reminderId}:
+    get:
+      tags: [ Reminders ]
+      summary: Получить напоминание по ID
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: reminderId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Напоминание найдено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReminderResponseDto'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    patch:
+      tags: [ Reminders ]
+      summary: Обновить напоминание
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: reminderId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReminderUpdateRequestDto'
+      responses:
+        '200':
+          description: Статус напоминания обновлен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReminderResponseDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags: [ Reminders ]
+      summary: Удалить напоминание об уходе
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: reminderId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          $ref: '#/components/responses/NoContent'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+components:
+  schemas:
+    CareTipResponseDto:
+      type: object
+      properties:
+        tipId:
+          type: string
+          format: uuid
+        title:
+          type: string
+        content:
+          type: string
+        category:
+          type: string
+
+    FoodRecommendationResponseDto:
+      type: object
+      properties:
+        foodId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        brand:
+          type: string
+        description:
+          type: string
+
+    ReminderResponseDto:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        petId:
+          type: string
+          format: uuid
+        petName:
+          type: string
+        dueDate:
+          type: string
+          format: date
+        type:
+          type: string
+        description:
+          type: string
+          nullable: true
+        status:
+          $ref: '#/components/schemas/ReminderStatus'
+
+    UserPetResponseDto:
+      type: object
+      properties:
+        petId:
+          type: string
+          format: uuid
+        ownerId:
+          type: integer
+          format: int64
+        name:
+          type: string
+        birthDate:
+          type: string
+          format: date
+        speciesName:
+          type: string
+        breedName:
+          type: string
+        allergyNames:
+          type: array
+          items:
+            $ref: '#/components/schemas/AllergyList'
+
+    AllergyList:
+      type: object
+      properties:
+        name:
+          type: string
+
+    ReminderStatus:
+      type: string
+      enum: [ PENDING, COMPLETED, SKIPPED ]
+
+    ReminderCreationRequestDto:
+      type: object
+      required:
+        - type
+        - dueDate
+        - petId
+      properties:
+        type:
+          type: string
+          maxLength: 50
+        description:
+          type: string
+          maxLength: 255
+          nullable: true
+        dueDate:
+          type: string
+          format: date
+        petId:
+          type: string
+          format: uuid
+
+    ReminderUpdateRequestDto:
+      type: object
+      properties:
+        type:
+          type: string
+          maxLength: 50
+        description:
+          type: string
+          maxLength: 255
+          nullable: true
+        dueDate:
+          type: string
+          format: date
+        status:
+          $ref: '#/components/schemas/ReminderStatus'
+
+    UserPetCreateRequestDto:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 100
+        birthDate:
+          type: string
+          format: date
+        speciesName:
+          type: string
+          maxLength: 50
+        breedName:
+          type: string
+          maxLength: 100
+        allergyNames:
+          type: array
+          items:
+            $ref: '#/components/schemas/AllergyList'
+
+    ErrorResponse:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        status:
+          type: integer
+        error:
+          type: string
+        message:
+          type: string
+        path:
+          type: string
+
+  responses:
+    BadRequest:
+      $ref: '#/components/schemas/ErrorResponse'
+    NotFound:
+      $ref: '#/components/schemas/ErrorResponse'
+    Forbidden:
+      $ref: '#/components/schemas/ErrorResponse'
+    NoContent:
+      description: Operation successful, no content to return
