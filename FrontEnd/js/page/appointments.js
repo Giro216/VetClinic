@@ -11,9 +11,12 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 
 function initAppointmentForm() {
+    const doctorSelectContainer = document.getElementById('doctorSelectContainer');
     const doctorSelect = document.getElementById('doctorSelect');
     const petSelect = document.getElementById('petSelect');
     const confirmBtn = document.getElementById('confirmAppointmentBtn');
+    const slotsContainer = document.getElementById('slotsContainer');
+    const appointmentDate = document.getElementById('appointmentDate');
     
     // Загрузка питомцев
     getPets().then(pets => {
@@ -22,26 +25,41 @@ function initAppointmentForm() {
         ).join('');
     });
     
-    // При выборе врача загружаем слоты
-    doctorSelect.addEventListener('change', async function() {
-        selectedDoctorId = this.value;
-        if (!selectedDoctorId) return;
-        
-        const date = document.getElementById('appointmentDate').value;
-        if (!date) {
-            alert('Пожалуйста, выберите дату');
-            return;
+    // При выборе даты показываем выбор врача
+    appointmentDate.addEventListener('change', function() {
+        if (this.value) {
+            // Сбрасываем выбранного врача
+            doctorSelect.value = '';
+            doctorSelect.disabled = false;
+            doctorSelectContainer.style.display = 'block';
+            
+            // Сбрасываем слоты
+            slotsContainer.style.display = 'none';
+            document.getElementById('slotsGrid').innerHTML = '';
+            
+            // Деактивируем кнопку подтверждения
+            confirmBtn.disabled = true;
+            selectedSlot = null;
+            selectedDoctorId = null;
+        } else {
+            doctorSelectContainer.style.display = 'none';
+            slotsContainer.style.display = 'none';
         }
-        
-        const slots = await getAvailableSlots(selectedDoctorId, date);
-        renderSlots(slots);
     });
     
-    // При изменении даты сбрасываем выбор
-    document.getElementById('appointmentDate').addEventListener('change', function() {
+    // При выборе врача загружаем слоты
+    doctorSelect.addEventListener('change', async function() {
+        // Сбрасываем предыдущий выбор
         document.getElementById('slotsGrid').innerHTML = '';
         selectedSlot = null;
         confirmBtn.disabled = true;
+        
+        selectedDoctorId = this.value;
+        if (!selectedDoctorId || !appointmentDate.value) return;
+        
+        slotsContainer.style.display = 'block';
+        const slots = await getAvailableSlots(selectedDoctorId, appointmentDate.value);
+        renderSlots(slots);
     });
     
     // Обработчик кнопки подтверждения

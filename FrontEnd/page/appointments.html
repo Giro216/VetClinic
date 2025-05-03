@@ -4,18 +4,6 @@
     <meta charset="UTF-8">
     <title>Vet Clinic</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        .slots-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-            gap: 10px;
-        }
-        .slot-btn {
-            width: 100%;
-            padding: 10px;
-            text-align: center;
-        }
-    </style>
 </head>
 <body>
     <div class="container">
@@ -29,12 +17,12 @@
         </div>
     </div>
 
-    <!-- Модальное окно записи (исправленная версия) -->
-    <div class="modal fade" id="appointmentModal" tabindex="-1" aria-hidden="true">
+    <!-- Правильное модальное окно Bootstrap -->
+    <div class="modal fade" id="appointmentModal" tabindex="-1" aria-labelledby="appointmentModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Запись на прием</h5>
+                    <h5 class="modal-title" id="appointmentModalLabel">Запись на прием</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
@@ -47,19 +35,19 @@
                                 </select>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Врач</label>
-                                <select class="form-select" id="doctorSelect" required>
-                                    <option value="" disabled selected>Выберите врача</option>
-                                    <option value="1">Иванов И.И. (Терапевт)</option>
-                                    <option value="2">Petrova P.P. (Хирург)</option>
-                                </select>
+                                <label class="form-label">Дата приема</label>
+                                <input type="date" class="form-control" id="appointmentDate" 
+                                       min="${new Date().toISOString().split('T')[0]}" required>
                             </div>
                         </div>
                         
-                        <div class="mb-3">
-                            <label class="form-label">Дата приема</label>
-                            <input type="date" class="form-control" id="appointmentDate" 
-                                   min="${new Date().toISOString().split('T')[0]}">
+                        <div class="mb-3" id="doctorSelectContainer" style="display: none;">
+                            <label class="form-label">Врач</label>
+                            <select class="form-select" id="doctorSelect" required disabled>
+                                <option value="" disabled selected>Выберите врача</option>
+                                <option value="1">Иванов И.И. (Терапевт)</option>
+                                <option value="2">Петрова П.П. (Хирург)</option>
+                            </select>
                         </div>
                         
                         <div class="mb-3">
@@ -67,7 +55,7 @@
                             <input type="text" class="form-control" id="appointmentReason" required>
                         </div>
                         
-                        <div id="slotsContainer">
+                        <div id="slotsContainer" style="display: none;">
                             <h5>Доступное время:</h5>
                             <div class="slots-grid" id="slotsGrid"></div>
                         </div>
