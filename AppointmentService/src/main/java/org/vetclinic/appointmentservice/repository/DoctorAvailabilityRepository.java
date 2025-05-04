@@ -9,4 +9,6 @@ import java.util.List;
 @Repository
 public interface DoctorAvailabilityRepository extends JpaRepository<DoctorAvailability, Long> {
     List<DoctorAvailability> findAllBySlotId(Long slotId);
+
+    List<DoctorAvailability> findByAvailableTrue();
 }
