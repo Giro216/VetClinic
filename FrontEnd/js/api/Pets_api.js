@@ -32,6 +32,23 @@ export async function createPet(petData) {
     return await response.json();
 }
 
+export async function deletePet(petId) {
+    const response = await fetch(`${API_BASE_URL}/pets/${petId}`, {
+        method: 'DELETE',
+    });
+    if (!response.ok && response.status !== 204) {
+        let errorMsg = `HTTP error! status: ${response.status}`;
+        try {
+            const errorBody = await response.text();
+            if (errorBody) {
+                errorMsg += `, message: ${errorBody}`;
+            }
+        } catch (e) {
+        }
+        throw new Error(errorMsg);
+    }
+}
+
 // Работа с медкартами
 export async function getMedicalCard(petId) {
     const response = await fetch(`${API_BASE_URL}/cards/${petId}`);

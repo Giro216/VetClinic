@@ -4,7 +4,7 @@ import {
     getMedicalCard, 
     createPet, 
     updateMedicalCard 
-} from "./api/api.js";
+} from "./api/Pets_api.js";
 
 
 document.addEventListener("DOMContentLoaded", async () => {

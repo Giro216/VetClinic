@@ -1,11 +1,11 @@
-import { getPets, getMedicalCard, createPet, updateMedicalCard } from "../api/api.js";
+import { getPets, getMedicalCard, createPet, updateMedicalCard, deletePet } from "../api/Pets_api.js";
 
 
 document.addEventListener("DOMContentLoaded", async () => {
     try {
         const pets = await getPets(); 
         renderPets(pets);
-        setupMedicalCardButtons();
+        setupPetCardButtons();
     } catch (error) {
         console.error("Error loading pets:", error);
         document.getElementById('petsList').innerHTML = `
@@ -19,22 +19,34 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 function renderPets(pets) {
     const container = document.getElementById('petsList');
+    if (!container) return;
     container.innerHTML = '';
-    
+
+    if (!pets || pets.length === 0) {
+        container.innerHTML = `<div class="col-12"><p>У вас пока нет добавленных питомцев.</p></div>`;
+        return;
+    }
+
     pets.forEach(pet => {
+        const petName = pet.name || 'Безымянный';
+        const petId = pet.petId;
+
         const card = `
             <div class="col-md-4 mb-4">
                 <div class="card">
-                    <div class="card-body row">
-                        <h5 class="card-title">${pet.name}</h5>
+                    <div class="card-body">
+                        <h5 class="card-title">${petName}</h5>
                         <p class="card-text">
-                            <span class="text-secondary"><strong>id:</strong> ${pet.petId}</span><br>
-                            <strong>Вид:</strong> ${pet.kind}<br>
-                            <strong>Возраст:</strong> ${pet.age}<br>
+                            ${petId ? `<span class="text-secondary" style="font-size: 0.8em;"><strong>ID:</strong> ${petId}</span><br>` : ''}
+                            <strong>Вид:</strong> ${pet.kind || 'Не указан'}<br>
+                            <strong>Возраст:</strong> ${(pet.age !== null && pet.age !== undefined) ? pet.age : 'Не указан'}<br>
                         </p>
-                        <div class="container">
-                            <button class="btn btn-primary btn-sm view-med-card" data-pet-id="${pet.petId}">
-                                Открыть медкарту
+                        <div class="mt-2 d-flex justify-content-between">
+                            <button class="btn btn-primary btn-sm view-med-card" data-pet-id="${petId}" ${!petId ? 'disabled' : ''}>
+                                Медкарта
+                            </button>
+                            <button class="btn btn-danger btn-sm delete-pet" data-pet-id="${petId}" data-pet-name="${petName}" ${!petId ? 'disabled' : ''}>
+                                Удалить
                             </button>
                         </div>
                     </div>
@@ -45,14 +57,32 @@ function renderPets(pets) {
     });
 }
 
-function setupMedicalCardButtons() {
-    document.querySelectorAll('.view-med-card').forEach(button => {
-        button.addEventListener('click', async function() {
-            const petId = this.getAttribute('data-pet-id');
+function setupPetCardButtons() {
+    const container = document.getElementById('petsList');
+    if (!container) return;
+
+    if (container._petCardActionListener) {
+        container.removeEventListener('click', container._petCardActionListener);
+    }
+
+    container._petCardActionListener = async (event) => {
+        const target = event.target;
+
+        if (target.classList.contains('view-med-card')) {
+            const button = target;
+            const petId = button.getAttribute('data-pet-id');
+            if (!petId) return;
+
+            button.disabled = true;
+            const originalText = button.textContent;
+            button.textContent = 'Загрузка...';
+
             try {
                 const medicalCard = await getMedicalCard(petId);
-                
                 if (medicalCard) {
+                    medicalCard.vaccinations = medicalCard.vaccinations || [];
+                    medicalCard.allergies = medicalCard.allergies || [];
+                    medicalCard.diseases = medicalCard.diseases || [];
                     showMedicalCardModal(medicalCard, petId);
                 } else {
                     alert('Медкарта не найдена для этого питомца');
@@ -60,9 +90,38 @@ function setupMedicalCardButtons() {
             } catch (error) {
                 console.error('Ошибка загрузки медкарты:', error);
                 alert('Не удалось загрузить медкарту');
+            } finally {
+                 button.disabled = false;
+                 button.textContent = originalText;
             }
-        });
-    });
+        }
+
+        else if (target.classList.contains('delete-pet')) {
+            const button = target;
+            const petId = button.getAttribute('data-pet-id');
+            const petName = button.getAttribute('data-pet-name') || 'этот питомец';
+            if (!petId) return;
+
+            if (confirm(`Вы уверены, что хотите удалить питомца "${petName}"?`)) {
+                button.disabled = true;
+                button.textContent = 'Удаление...';
+
+                try {
+                    await deletePet(petId);
+                    const pets = await getPets();
+                    renderPets(pets);
+                    setupPetCardButtons();
+                } catch (error) {
+                    console.error('Ошибка при удалении питомца:', error);
+                    alert(`Не удалось удалить питомца: ${error.message}`);
+                    button.disabled = false;
+                    button.textContent = 'Удалить';
+                }
+            }
+        }
+    };
+
+    container.addEventListener('click', container._petCardActionListener);
 }
 
 function showMedicalCardModal(medicalCard, petId) {
