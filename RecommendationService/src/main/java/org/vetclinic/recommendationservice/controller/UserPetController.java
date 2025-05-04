@@ -6,10 +6,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import org.vetclinic.recommendationservice.dto.request.UserPetCreateRequestDto;
+import org.vetclinic.recommendationservice.dto.request.UserPetUpdateRequestDto;
 import org.vetclinic.recommendationservice.dto.response.UserPetResponseDto;
 import org.vetclinic.recommendationservice.service.UserPetService;
 
 import java.net.URI;
+import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/users/{userId}/pets")
@@ -30,6 +33,26 @@ public class UserPetController {
                 .toUri();
 
         return ResponseEntity.created(location).body(createdPet);
+    }
+
+    @GetMapping
+    public ResponseEntity<List<UserPetResponseDto>> getPets(@PathVariable Long userId) {
+        List<UserPetResponseDto> pets = userPetService.getPetsForUser(userId);
+        return ResponseEntity.ok(pets);
+    }
+
+    @GetMapping("/{petId}")
+    public ResponseEntity<UserPetResponseDto> getPetById(@PathVariable Long userId, @PathVariable UUID petId) {
+        UserPetResponseDto pet = userPetService.getPetByIdForUser(userId, petId);
+        return ResponseEntity.ok(pet);
+    }
+
+    @PatchMapping("/{petId}")
+    public ResponseEntity<UserPetResponseDto> updatePet(@PathVariable Long userId,
+                                                        @PathVariable UUID petId,
+                                                        @Valid @RequestBody UserPetUpdateRequestDto requestDto) {
+        UserPetResponseDto updatedPet = userPetService.updatePetForUser(userId, petId, requestDto);
+        return ResponseEntity.ok(updatedPet);
     }
 
 }
