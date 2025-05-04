@@ -29,9 +29,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     await loadMedicalCard(currentPetId);
-
     await loadRecommendations(currentPetId);
-
     setupEventListeners();
 });
 
@@ -55,8 +53,6 @@ async function loadMedicalCard(petId) {
     } catch (error) {
         console.error('Ошибка загрузки основной медкарты:', error);
         showError(`Не удалось загрузить основную медкарту: ${error.message}`);
-        showLoading(false);
-        switchToViewMode();
     }
 }
 
@@ -99,7 +95,6 @@ function renderViewMode(medicalCard) {
          vaccinationsViewContainer.insertAdjacentHTML('beforebegin', '<h6>Прививки:</h6>');
     }
 
-
     let allergiesViewContainer = viewModeContent.querySelector('#allergiesViewContainer');
     if (!allergiesViewContainer) {
         allergiesViewContainer = document.createElement('div');
@@ -108,7 +103,6 @@ function renderViewMode(medicalCard) {
          allergiesViewContainer.insertAdjacentHTML('beforebegin', '<h6>Аллергии:</h6>');
     }
 
-
      let diseasesViewContainer = viewModeContent.querySelector('#diseasesViewContainer');
      if (!diseasesViewContainer) {
          diseasesViewContainer = document.createElement('div');
@@ -116,7 +110,6 @@ function renderViewMode(medicalCard) {
           allergiesViewContainer.insertAdjacentElement('afterend', diseasesViewContainer);
           diseasesViewContainer.insertAdjacentHTML('beforebegin', '<h6>Хронические заболевания:</h6>');
      }
-
 
     vaccinationsViewContainer.innerHTML = (medicalCard.vaccinations && medicalCard.vaccinations.length > 0) ? `
         <ul class="list-group mb-3">
@@ -143,13 +136,13 @@ function renderViewMode(medicalCard) {
          </div>
      `;
 
-     // Добавляем разделитель перед секциями рекомендаций, если они существуют
      const hrSeparator = viewModeContent.querySelector('#separatorAfterBasicCard');
      if (!hrSeparator) {
         const hr = document.createElement('hr');
         hr.id = 'separatorAfterBasicCard';
-        if (foodRecommendationsList && foodRecommendationsList.parentNode) {
-             foodRecommendationsList.parentNode.parentNode.insertBefore(hr, foodRecommendationsList.parentNode);
+        const foodSection = viewModeContent.querySelector('#foodRecommendationsSection');
+        if (foodSection && foodSection.parentNode) {
+             foodSection.parentNode.insertBefore(hr, foodSection);
         } else if (diseasesViewContainer) {
              diseasesViewContainer.insertAdjacentElement('afterend', hr);
         }
@@ -157,7 +150,7 @@ function renderViewMode(medicalCard) {
 }
 
 function renderEditMode(medicalCard) {
-    editModeContent.innerHTML = `
+     editModeContent.innerHTML = `
         <h6>Прививки:</h6>
         <div class="mb-3">
             <div id="vaccinationsEditContainer">
@@ -182,7 +175,7 @@ function renderEditMode(medicalCard) {
 }
 
 function renderVaccinationInput(vacc = { type: '', date: '' }, index) {
-    return `
+     return `
         <div class="input-group mb-2 vaccination-item" data-index="${index}">
             <input type="text" class="form-control vaccination-type" value="${vacc.type || ''}" placeholder="Тип прививки">
             <input type="date" class="form-control vaccination-date" value="${vacc.date || ''}">
@@ -191,7 +184,7 @@ function renderVaccinationInput(vacc = { type: '', date: '' }, index) {
     `;
 }
 
-// для рендеринга рекомендаций по корму
+
 function renderFoodRecommendations(recommendations) {
      if (!foodRecommendationsList) return;
 
@@ -240,7 +233,6 @@ function renderCareTips(tips) {
      `;
 }
 
-
 function showLoading(isLoading) {
     if (isLoading) {
         loadingIndicator.style.display = 'block';
@@ -260,9 +252,11 @@ function setSaveButtonLoading(isLoading) {
     } else {
         saveChangesBtn.disabled = false;
         spinner.style.display = 'none';
-         saveChangesBtn.childNodes[saveChangesBtn.childNodes.length - 1].nodeValue = ' Сохранить';
+         saveChangesBtn.childNodes[saveChangesBtn.childNodes.length - 1].nodeValue = ' Сохранить медкарту';
     }
 }
+
+
 
 function switchToViewMode() {
     viewModeContent.style.display = 'block';
@@ -292,6 +286,7 @@ function setupEventListeners() {
 
     cancelEditBtn.addEventListener('click', () => {
         renderViewMode(originalMedicalCard);
+        loadRecommendations(currentPetId);
         switchToViewMode();
         clearAlert();
     });
@@ -302,7 +297,7 @@ function setupEventListeners() {
 }
 
 function setupEditModeListeners() {
-    document.getElementById('addVaccinationBtn')?.addEventListener('click', () => {
+     document.getElementById('addVaccinationBtn')?.addEventListener('click', () => {
         const container = document.getElementById('vaccinationsEditContainer');
         const newIndex = container.children.length;
         const newItemHtml = renderVaccinationInput({ type: '', date: '' }, newIndex);
@@ -343,11 +338,11 @@ async function handleSaveChanges() {
         originalMedicalCard = JSON.parse(JSON.stringify(updatedMedicalCard));
         renderViewMode(originalMedicalCard);
         switchToViewMode();
-        showAlert('Изменения успешно сохранены!', 'success');
+        showAlert('Изменения медицинской карты успешно сохранены!', 'success');
 
     } catch (error) {
         console.error('Ошибка при сохранении медкарты:', error);
-        showAlert(`Ошибка при сохранении: ${error.message}`, 'danger');
+        showAlert(`Ошибка при сохранении медицинской карты: ${error.message}`, 'danger');
     } finally {
         setSaveButtonLoading(false);
     }

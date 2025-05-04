@@ -29,16 +29,9 @@
 
             <div id="cardData" style="display: none;">
                 <div id="viewModeContent">
-                     <h6>Прививки:</h6>
-
-                     <h6>Аллергии:</h6>
-
-                     <h6>Хронические заболевания:</h6>
-
-                     <hr>
-
-                     <div id="foodRecommendationsSection">
-                         <h6>Рекомендации по корму:</h6>
+                    <div id="foodRecommendationsSection">
+                         <h6>Рекомендации по корму:
+                         </h6>
                          <div id="foodRecommendationsList">
                          </div>
                      </div>
@@ -52,26 +45,20 @@
                 </div>
 
                 <div id="editModeContent" style="display: none;">
-                     <h6>Прививки:</h6>
-
-                     <h6>Аллергии:</h6>
-
-                     <h6>Хронические заболевания:</h6>
                 </div>
 
                 <div class="mt-4">
                     <button type="button" class="btn btn-secondary" id="backBtn">Назад</button>
-                    <button type="button" class="btn btn-outline-primary" id="editToggleBtn">Редактировать</button>
+                    <button type="button" class="btn btn-outline-primary" id="editToggleBtn">Редактировать медкарту</button>
                     <button type="button" class="btn btn-primary" id="saveChangesBtn" style="display: none;">
                         <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display: none;"></span>
-                        Сохранить
+                        Сохранить медкарту
                     </button>
                      <button type="button" class="btn btn-outline-secondary" id="cancelEditBtn" style="display: none;">Отмена</button>
                 </div>
             </div>
         </div>
     </div>
-
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js"></script>
 
     <script src="../js/api/recommendation_api.js" type="module"></script>

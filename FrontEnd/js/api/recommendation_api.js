@@ -18,7 +18,15 @@ export async function getFoodRecommendations(petId) {
         }
 
         if (!response.ok) {
-            throw new Error(`Ошибка HTTP при получении рекомендаций по корму: ${response.status} ${response.statusText}`);
+            let errorBody = await response.text();
+            try {
+                 const jsonError = JSON.parse(errorBody);
+                  if (jsonError && jsonError.detail) {
+                      errorBody = jsonError.detail;
+                  }
+             } catch(e) {
+             }
+            throw new Error(`Ошибка HTTP при получении рекомендаций по корму: ${response.status} ${response.statusText}. ${errorBody}`);
         }
 
         return await response.json();
@@ -47,7 +55,15 @@ export async function getCareTips(petId) {
 
 
         if (!response.ok) {
-            throw new Error(`Ошибка HTTP при получении советов по уходу: ${response.status} ${response.statusText}`);
+            let errorBody = await response.text();
+            try {
+                 const jsonError = JSON.parse(errorBody);
+                  if (jsonError && jsonError.detail) {
+                      errorBody = jsonError.detail;
+                  }
+             } catch(e) {
+             }
+            throw new Error(`Ошибка HTTP при получении советов по уходу: ${response.status} ${response.statusText}. ${errorBody}`);
         }
 
         return await response.json();
@@ -57,7 +73,44 @@ export async function getCareTips(petId) {
     }
 }
 
+
 const CURRENT_USER_ID = 1;
+
+export async function createRecommendationPet(userId, petData) {
+     if (!petData || !petData.name || !petData.speciesName) {
+         console.error("Неполные данные для создания питомца в RecommendationService.");
+         throw new Error("Неполные данные для создания питомца в RecommendationService.");
+     }
+    try {
+        const response = await fetch(`${API_BASE_URL_RECOMMENDATIONS}/users/${userId}/pets`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify(petData)
+        });
+
+        if (!response.ok) {
+             let errorBody = await response.text();
+             try {
+                 const jsonError = JSON.parse(errorBody);
+                  if (jsonError && jsonError.detail) {
+                      errorBody = jsonError.detail;
+                  }
+             } catch(e) {
+             }
+            throw new Error(`Ошибка HTTP при создании питомца в RecommendationService: ${response.status} ${response.statusText}. ${errorBody}`);
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error(`Ошибка при создании питомца в RecommendationService для пользователя ${userId}:`, error);
+        throw error;
+    }
+}
+
 
 export async function getReminders(userId = CURRENT_USER_ID, status = null) {
     try {
@@ -176,7 +229,7 @@ export async function deleteReminder(userId = CURRENT_USER_ID, reminderId) {
              let errorBody = await response.text();
              try {
                  const jsonError = JSON.parse(errorBody);
-                  if (jsonError && jsonError.detail) {
+                  if (jsonJsonError && jsonJsonError.detail) {
                       errorBody = jsonError.detail;
                   }
              } catch(e) {
@@ -226,4 +279,3 @@ export async function getReminderById(userId = CURRENT_USER_ID, reminderId) {
        throw error;
    }
 }
-

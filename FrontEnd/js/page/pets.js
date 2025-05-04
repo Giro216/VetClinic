@@ -1,8 +1,12 @@
-import { getPets, deletePet, createPet } from "../api/Pets_api.js";
+import { getPets, deletePet, createPet, createMedicalCard, API_BASE_URL } from "../api/Pets_api.js";
+import { createRecommendationPet } from "../api/recommendation_api.js";
 
 let qrModalInstance = null;
 const qrCodeCanvas = document.getElementById('qrCodeCanvas');
 const qrCodeUrlElement = document.getElementById('qrCodeUrl');
+const alertPlaceholder = document.getElementById('alertPlaceholder');
+
+const CURRENT_USER_ID = 1;
 
 document.addEventListener("DOMContentLoaded", async () => {
     const qrModalElement = document.getElementById('qrCodeModal');
@@ -131,9 +135,11 @@ function setupPetCardButtons() {
                     await deletePet(petId);
                     const pets = await getPets();
                     renderPets(pets);
+                    setupPetCardButtons();
+                     showAlert(`Питомец "${petName}" успешно удален.`, 'success');
                 } catch (error) {
                     console.error('Ошибка при удалении питомца:', error);
-                    displayError(`Не удалось удалить питомца: ${error.message}`);
+                    displayError(`Не удалось удалить питомца "${petName}": ${error.message}`);
                     button.disabled = false;
                     button.textContent = originalText;
                 }
@@ -149,6 +155,8 @@ document.getElementById('savePetBtn')?.addEventListener('click', async () => {
     const addPetModalElement = document.getElementById('addPetModal');
     const addPetForm = document.getElementById('addPetForm');
 
+    clearAlert();
+
     if (!addPetForm.checkValidity()) {
          addPetForm.reportValidity();
          return;
@@ -158,19 +166,72 @@ document.getElementById('savePetBtn')?.addEventListener('click', async () => {
     saveButton.textContent = 'Сохранение...';
 
     try {
-        const petData = {
-            name: document.getElementById('petName').value.trim(),
-            kind: document.getElementById('petKind').value,
-            age: parseFloat(document.getElementById('petAge').value) || 0
-        };
+        const petName = document.getElementById('petName').value.trim();
+        const petKind = document.getElementById('petKind').value;
+        const petAge = parseFloat(document.getElementById('petAge').value) || 0;
 
-        if (!petData.name) throw new Error("Пожалуйста, введите имя питомца.");
-        if (!petData.kind) throw new Error("Пожалуйста, выберите вид питомца.");
-        if (isNaN(petData.age) || petData.age < 0) {
+        if (!petName) throw new Error("Пожалуйста, введите имя питомца.");
+        if (!petKind) throw new Error("Пожалуйста, выберите вид питомца.");
+        if (isNaN(petAge) || petAge < 0) {
              throw new Error("Пожалуйста, введите корректный возраст (0 или больше).");
         }
 
-        await createPet(petData);
+        const estimatedBirthDate = calculateEstimatedBirthDate(petAge);
+
+        const petDataRecommendationService = {
+            name: petName,
+            birthDate: estimatedBirthDate,
+            speciesName: petKind,
+            breedName: null,
+            allergyNames: []
+        };
+
+        let createdPetFromRecService = null;
+        try {
+             createdPetFromRecService = await createRecommendationPet(CURRENT_USER_ID, petDataRecommendationService);
+             console.log(`Питомец успешно создан в RecommendationService с ID: ${createdPetFromRecService.petId}`);
+
+        } catch (recError) {
+             console.error('Ошибка при создании питомца в RecommendationService:', recError);
+             alert(`Ошибка при создании питомца в рекомендациях: ${recError.message || 'Неизвестная ошибка'}\nСоздание в основном списке отменено.`);
+             saveButton.disabled = false;
+             saveButton.textContent = 'Сохранить';
+             return;
+        }
+
+
+        const petDataMainService = {
+            name: petName,
+            kind: petKind,
+            age: petAge
+        };
+
+        let createdPetFromMainService = null;
+        try {
+            createdPetFromMainService = await createPet(petDataMainService, createdPetFromRecService.petId);
+
+            console.log('Питомец успешно создан в основном сервисе:', createdPetFromMainService);
+
+             try {
+                 await createMedicalCard(createdPetFromMainService.petId);
+                 console.log(`Пустая медкарта успешно создана в основном сервисе для petId: ${createdPetFromMainService.petId}`);
+             } catch (cardError) {
+                 console.error('Ошибка при создании пустой медкарты в основном сервисе:', cardError);
+                 showAlert(`Питомец добавлен, но произошла ошибка при создании пустой медкарты: ${cardError.message}`, 'warning');
+             }
+
+
+            showAlert('Питомец успешно добавлен!', 'success');
+
+
+        } catch (mainError) {
+            console.error('Ошибка при создании питомца в основном сервисе:', mainError);
+            alert(`Ошибка при создании питомца в основном списке: ${mainError.message || 'Неизвестная ошибка'}\nПитомец был создан только в рекомендациях.`);
+        } finally {
+             saveButton.disabled = false;
+             saveButton.textContent = 'Сохранить';
+        }
+
 
         const modal = bootstrap.Modal.getInstance(addPetModalElement);
         addPetForm.reset();
@@ -185,12 +246,10 @@ document.getElementById('savePetBtn')?.addEventListener('click', async () => {
             try {
                 const pets = await getPets();
                 renderPets(pets);
+                setupPetCardButtons();
             } catch (fetchError) {
                 console.error("Error fetching pets after add:", fetchError);
                 displayError(`Не удалось обновить список питомцев: ${fetchError.message}`);
-            } finally {
-                saveButton.disabled = false;
-                saveButton.textContent = 'Сохранить';
             }
         };
 
@@ -199,17 +258,49 @@ document.getElementById('savePetBtn')?.addEventListener('click', async () => {
 
         if (modal) {
             modal.hide();
-        } else {
-             saveButton.disabled = false; 
-             saveButton.textContent = 'Сохранить';
         }
 
+
     } catch (error) {
-        alert(`Ошибка при создании питомца: ${error.message || 'Неизвестная ошибка'}`);
+        console.error('Ошибка валидации формы:', error);
+        alert(`Ошибка: ${error.message || 'Неизвестная ошибка'}`);
         saveButton.disabled = false;
         saveButton.textContent = 'Сохранить';
     }
 });
+
+function calculateEstimatedBirthDate(ageInYears) {
+    if (ageInYears === null || ageInYears === undefined || ageInYears < 0) {
+         return null;
+    }
+    const totalMonths = Math.round(ageInYears * 12);
+    const today = new Date();
+    const birthDate = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()));
+    birthDate.setUTCMonth(birthDate.getUTCMonth() - totalMonths);
+
+    const year = birthDate.getUTCFullYear();
+    const month = (birthDate.getUTCMonth() + 1).toString().padStart(2, '0');
+    const day = birthDate.getUTCDate().toString().padStart(2, '0');
+
+    return `${year}-${month}-${day}`;
+}
+
+function showAlert(message, type = 'danger') {
+    const wrapper = document.createElement('div');
+    wrapper.innerHTML = `
+        <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    `;
+    alertPlaceholder.innerHTML = '';
+    alertPlaceholder.append(wrapper);
+}
+
+function clearAlert() {
+    alertPlaceholder.innerHTML = '';
+}
+
 
 function displayError(message) {
     const container = document.getElementById('petsList');
@@ -219,8 +310,9 @@ function displayError(message) {
                 <div class="alert alert-danger">${message}</div>
             </div>
         `;
+         alertPlaceholder.innerHTML = '';
     } else {
         console.error("Target container 'petsList' not found for error display.");
-        alert(message);
+        showAlert(message, 'danger');
     }
 }
