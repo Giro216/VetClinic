@@ -46,13 +46,13 @@ async function loadAndRenderAppointments() {
 async function initAppointmentForm() {
     const today = new Date();
     const todayISO = today.toISOString().split('T')[0];
-    appointmentDate.min = todayISO; // Устанавливаем минимальную дату (сегодня)
+    appointmentDate.min = todayISO;
 
     appointmentDate.disabled = false
 
-    await loadPetsForForm(); // Загружаем питомцев
+    await loadPetsForForm();
 
-    await loadDoctorsForForm(); // Загружаем врачей
+    await loadDoctorsForForm();
 
     doctorSelectContainer.style.display = 'none';
     doctorSelect.disabled = true;
@@ -60,7 +60,7 @@ async function initAppointmentForm() {
     slotsContainer.style.display = 'none';
     confirmBtn.disabled = true;
 
-     checkFormCompleteness(); 
+     checkFormCompleteness();
 }
 
 async function loadPetsForForm() {
@@ -102,39 +102,35 @@ async function loadDoctorsForForm() {
     } catch (error) {
         doctorSelect.innerHTML = `<option value="" disabled selected>Ошибка загрузки врачей</option>`;
         doctorSelect.disabled = true;
-        checkFormCompleteness(); 
+        checkFormCompleteness();
     }
 }
-
 
 function setupFormEventListeners() {
     appointmentDate.addEventListener('change', async function() {
         resetSlotSelection();
-        selectedDoctorIdForBooking = null; 
+        selectedDoctorIdForBooking = null;
 
         slotsGrid.innerHTML = '';
 
         const selectedDate = this.value;
 
-        if (!selectedDate) { 
-             slotsContainer.style.display = 'none'; 
-             checkFormCompleteness(); 
+        if (!selectedDate) {
+             slotsContainer.style.display = 'none';
+             checkFormCompleteness();
              return;
         }
 
         slotsContainer.style.display = 'block';
-        slotsGrid.innerHTML = '<div class="text-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Загрузка...</span></div></div>'; // Показываем индикатор загрузки
+        slotsGrid.innerHTML = '<div class="text-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Загрузка...</span></div></div>';
 
         try {
-         
             allAvailableSlotsForDate = await getAvailableSlotsByDate(selectedDate);
-
             renderSlots(allAvailableSlotsForDate);
-
         } catch (error) {
             slotsGrid.innerHTML = `<div class="alert alert-danger">Не удалось загрузить доступные слоты на выбранную дату: ${error.message}</div>`;
         }
-        checkFormCompleteness(); 
+        checkFormCompleteness();
     });
 
     slotsGrid.addEventListener('click', function(event) {
@@ -143,13 +139,13 @@ function setupFormEventListeners() {
             const clickedSlotId = target.getAttribute('data-slot-id');
             if (!clickedSlotId) return;
 
-            const slotsData = slotsGrid._filteredSlotsData; 
+            const slotsData = slotsGrid._filteredSlotsData;
             const clickedSlot = slotsData ? slotsData.find(s => s.id == clickedSlotId) : null;
 
             if (clickedSlot) {
                 if (selectedSlot && selectedSlot.id == clickedSlot.id) {
                     resetSlotSelection();
-                     selectedDoctorIdForBooking = null; 
+                     selectedDoctorIdForBooking = null;
                 } else {
                     document.querySelectorAll('.slot-btn').forEach(btn => {
                         btn.classList.remove('btn-primary');
@@ -159,7 +155,7 @@ function setupFormEventListeners() {
                     target.classList.add('btn-primary');
                     selectedSlot = clickedSlot;
 
-                    selectedDoctorIdForBooking = null; 
+                    selectedDoctorIdForBooking = null;
                     if (selectedSlot.availabilities && Array.isArray(selectedSlot.availabilities)) {
                         const availableAvailability = selectedSlot.availabilities.find(av => av.available === true && av.doctor && av.doctor.id);
                         if (availableAvailability) {
@@ -172,7 +168,7 @@ function setupFormEventListeners() {
                          console.error("В выбранном слоте", selectedSlot.id, "отсутствуют или некорректны данные availabilities.");
                     }
 
-                     checkFormCompleteness(); 
+                     checkFormCompleteness();
                 }
             } else {
                 console.error("Данные выбранного слота не найдены:", clickedSlotId);
@@ -187,21 +183,21 @@ function setupFormEventListeners() {
     });
 
      petSelect.addEventListener('change', checkFormCompleteness);
-     appointmentReason.addEventListener('input', checkFormCompleteness); 
+     appointmentReason.addEventListener('input', checkFormCompleteness);
 }
 
 async function handleBookingAttempt() {
     const petId = petSelect.value;
     const slotId = selectedSlot ? selectedSlot.id : null;
     const doctorId = selectedDoctorIdForBooking;
-    const reason = appointmentReason.value.trim(); 
+    const reason = appointmentReason.value.trim();
 
     if (!petId || !slotId || !doctorId || !reason) {
         console.error("Не все данные для бронирования выбраны:", {petId, slotId, doctorId, reason});
         return;
     }
 
-    confirmBtn.disabled = true; 
+    confirmBtn.disabled = true;
     confirmBtn.textContent = 'Бронирование...';
 
     try {
@@ -228,14 +224,13 @@ async function handleBookingAttempt() {
     }
 }
 
-
 function renderSlots(slots) {
     const container = slotsGrid;
     container.innerHTML = '';
     selectedSlot = null;
-    selectedDoctorIdForBooking = null; 
+    selectedDoctorIdForBooking = null;
 
-    container._filteredSlotsData = slots; 
+    container._filteredSlotsData = slots;
 
     if (!slots || slots.length === 0) {
         container.innerHTML = '<div class="alert alert-info">Нет доступных слотов на выбранную дату.</div>';
@@ -252,7 +247,7 @@ function renderSlots(slots) {
 
         container.appendChild(slotElement);
     });
-    checkFormCompleteness(); 
+    checkFormCompleteness();
 }
 
 function checkFormCompleteness() {
@@ -281,7 +276,7 @@ function resetDoctorAndSlotSelection() {
     if (slotsGrid) {
          slotsGrid._filteredSlotsData = [];
     }
-    allAvailableSlotsForDate = []; 
+    allAvailableSlotsForDate = [];
 }
 
 function resetAppointmentForm() {
@@ -289,7 +284,7 @@ function resetAppointmentForm() {
     resetDoctorAndSlotSelection();
     slotsGrid.innerHTML = '';
     slotsContainer.style.display = 'none';
-    selectedDoctorIdForBooking = null; 
+    selectedDoctorIdForBooking = null;
 
     checkFormCompleteness();
 }
@@ -303,14 +298,15 @@ function renderAppointments(appointments) {
     }
 
     appointments.forEach(app => {
-
         const petId = app.petId != null ? app.petId.toString() : 'Не указан';
-        const doctorName = app.doctorName || 'Не указан';
-        const datetimeString = app.datetime ? new Date(app.datetime).toLocaleString('ru-RU') : 'Дата/время не указаны'; 
+        const bookedDoctorAvailability = app.slot?.availabilities?.find(av => av.doctor?.id === app.doctorId);
+        const doctorName = bookedDoctorAvailability?.doctor?.name || 'Не указан';
+
+        const datetimeString = app.slot?.startTime ? new Date(app.slot.startTime).toLocaleString('ru-RU') : 'Дата/время не указаны';
+
         const status = app.status || 'Неизвестно';
         const reason = app.reason || 'Не указана';
         const statusClass = status === 'BOOKED' ? 'success' : (status === 'COMPLETED' ? 'primary' : 'warning');
-
 
         const card = `
             <div class="col-md-6 mb-4">
@@ -323,8 +319,6 @@ function renderAppointments(appointments) {
                             <strong>Статус:</strong> <span class="badge bg-${statusClass}">${status}</span><br>
                             <strong>Причина:</strong> ${reason}
                         </div>
-                         <!-- Кнопка удаления (опционально, если реализована на бэке) -->
-                         <!-- <button class="btn btn-danger btn-sm mt-2 delete-appointment" data-appointment-id="${app.id}">Отменить</button> -->
                     </div>
                 </div>
             </div>

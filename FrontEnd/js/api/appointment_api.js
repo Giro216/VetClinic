@@ -2,7 +2,7 @@ const API_BASE_URL_APPOINTMENTS = 'http://localhost:8082';
 
 export async function getDoctors() {
     try {
-        const response = await fetch(`${API_BASE_URL_APPOINTMENTS}/appointments/doctors/all`, {
+        const response = await fetch(`${API_BASE_URL_APPOINTMENTS}/appointments/doctors`, {
             credentials: 'include',
             headers: {
                 'Accept': 'application/json'
@@ -67,8 +67,6 @@ export async function getAvailableSlotsByDate(dateString) {
     }
 }
 
-
-
 export async function bookAppointment(slotId, doctorId, petId, reason) {
     const requestBody = {
         petId: parseInt(petId, 10),
@@ -87,20 +85,23 @@ export async function bookAppointment(slotId, doctorId, petId, reason) {
             },
             body: JSON.stringify(requestBody)
         });
-        let responseData = null;
-        try {
-             responseData = await response.json();
-        } catch (e) {
-             console.error("Не удалось распарсить JSON ответ:", e);
-        }
 
+        let responseData = null;
+        if (response.status !== 204) {
+             try {
+                 responseData = await response.json();
+             } catch (e) {
+             }
+        }
 
         if (!response.ok) {
              let errorMessage = `Ошибка HTTP при бронировании: ${response.status} ${response.statusText}`;
-             if (responseData && responseData.status) { 
-                 errorMessage = `Ошибка бронирования: ${responseData.status}`;
+             if (responseData && responseData.detail) {
+                 errorMessage = `Ошибка бронирования: ${responseData.detail}`;
              } else if (responseData && typeof responseData === 'string') {
                  errorMessage = `Ошибка бронирования: ${responseData}`;
+             } else if (responseData) {
+                  errorMessage += `: ${JSON.stringify(responseData)}`;
              }
              throw new Error(errorMessage);
         }
