@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Медицинская карта питомца</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+              <li class="breadcrumb-item"><a href="pets.html">Мои питомцы</a></li>
+              <li class="breadcrumb-item active" aria-current="page">Медицинская карта</li>
+            </ol>
+          </nav>
+
+        <h2 id="pageTitle">Медицинская карта</h2>
+        <hr>
+
+        <div id="alertPlaceholder"></div>
+
+        <div id="medCardContent">
+            <div id="loadingIndicator" class="text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Загрузка...</span>
+                </div>
+                <p class="mt-2">Загрузка данных...</p>
+            </div>
+
+            <div id="cardData" style="display: none;">
+                <div id="viewModeContent">
+                </div>
+
+                <div id="editModeContent" style="display: none;">
+                </div>
+
+                <div class="mt-4">
+                    <button type="button" class="btn btn-secondary" id="backBtn">Назад</button>
+                    <button type="button" class="btn btn-outline-primary" id="editToggleBtn">Редактировать</button>
+                    <button type="button" class="btn btn-primary" id="saveChangesBtn" style="display: none;">
+                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display: none;"></span>
+                        Сохранить
+                    </button>
+                     <button type="button" class="btn btn-outline-secondary" id="cancelEditBtn" style="display: none;">Отмена</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script src="../js/page/medCard.js" type="module"></script>
+</body>
+</html>

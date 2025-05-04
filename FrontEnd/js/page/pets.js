@@ -1,21 +1,24 @@
-import { getPets, getMedicalCard, createPet, updateMedicalCard, deletePet } from "../api/Pets_api.js";
+import { getPets, deletePet, createPet } from "../api/Pets_api.js";
 
+let qrModalInstance = null;
+const qrCodeCanvas = document.getElementById('qrCodeCanvas');
+const qrCodeUrlElement = document.getElementById('qrCodeUrl');
 
 document.addEventListener("DOMContentLoaded", async () => {
+    const qrModalElement = document.getElementById('qrCodeModal');
+    if (qrModalElement) {
+        qrModalInstance = new bootstrap.Modal(qrModalElement);
+    }
+
     try {
-        const pets = await getPets(); 
+        const pets = await getPets();
         renderPets(pets);
         setupPetCardButtons();
     } catch (error) {
         console.error("Error loading pets:", error);
-        document.getElementById('petsList').innerHTML = `
-            <div class="col-12">
-                <div class="alert alert-danger">Ошибка загрузки питомцев: ${error.message}</div>
-            </div>
-        `;
+        displayError(`Ошибка загрузки питомцев: ${error.message}`);
     }
 });
-
 
 function renderPets(pets) {
     const container = document.getElementById('petsList');
@@ -30,21 +33,27 @@ function renderPets(pets) {
     pets.forEach(pet => {
         const petName = pet.name || 'Безымянный';
         const petId = pet.petId;
+        const medCardRelativeUrl = `medCard.html?petId=${petId}`;
 
         const card = `
-            <div class="col-md-4 mb-4">
-                <div class="card">
-                    <div class="card-body">
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-body d-flex flex-column">
                         <h5 class="card-title">${petName}</h5>
                         <p class="card-text">
                             ${petId ? `<span class="text-secondary" style="font-size: 0.8em;"><strong>ID:</strong> ${petId}</span><br>` : ''}
                             <strong>Вид:</strong> ${pet.kind || 'Не указан'}<br>
                             <strong>Возраст:</strong> ${(pet.age !== null && pet.age !== undefined) ? pet.age : 'Не указан'}<br>
                         </p>
-                        <div class="mt-2 d-flex justify-content-between">
-                            <button class="btn btn-primary btn-sm view-med-card" data-pet-id="${petId}" ${!petId ? 'disabled' : ''}>
-                                Медкарта
-                            </button>
+                        <div class="mt-auto d-flex justify-content-between pt-2">
+                            <div>
+                                <a href="${medCardRelativeUrl}" class="btn btn-primary btn-sm view-med-card" ${!petId ? 'aria-disabled="true" style="pointer-events: none; opacity: 0.65;"' : ''}>
+                                    Медкарта
+                                </a>
+                                <button class="btn btn-secondary btn-sm generate-qr-btn ms-1" data-pet-id="${petId}" ${!petId ? 'disabled' : ''}>
+                                    QR
+                                </button>
+                            </div>
                             <button class="btn btn-danger btn-sm delete-pet" data-pet-id="${petId}" data-pet-name="${petName}" ${!petId ? 'disabled' : ''}>
                                 Удалить
                             </button>
@@ -68,31 +77,42 @@ function setupPetCardButtons() {
     container._petCardActionListener = async (event) => {
         const target = event.target;
 
-        if (target.classList.contains('view-med-card')) {
+        if (target.classList.contains('generate-qr-btn')) {
             const button = target;
             const petId = button.getAttribute('data-pet-id');
-            if (!petId) return;
+            if (!petId || !qrModalInstance || !qrCodeCanvas) return;
 
             button.disabled = true;
-            const originalText = button.textContent;
-            button.textContent = 'Загрузка...';
 
             try {
-                const medicalCard = await getMedicalCard(petId);
-                if (medicalCard) {
-                    medicalCard.vaccinations = medicalCard.vaccinations || [];
-                    medicalCard.allergies = medicalCard.allergies || [];
-                    medicalCard.diseases = medicalCard.diseases || [];
-                    showMedicalCardModal(medicalCard, petId);
-                } else {
-                    alert('Медкарта не найдена для этого питомца');
-                }
+                const origin = window.location.origin;
+                const pathname = window.location.pathname;
+                const directoryPath = pathname.substring(0, pathname.lastIndexOf('/'));
+                const absoluteMedCardUrl = `${origin}${directoryPath}/medCard.html?petId=${petId}`;
+
+                qrCodeCanvas.innerHTML = '';
+
+                new QRCode(qrCodeCanvas, {
+                    text: absoluteMedCardUrl,
+                    width: 180,
+                    height: 180,
+                    colorDark: "#000000",
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.H
+                });
+
+                 if (qrCodeUrlElement) {
+                    qrCodeUrlElement.textContent = "Ссылка";
+                    qrCodeUrlElement.href = absoluteMedCardUrl;
+                 }
+
+                qrModalInstance.show();
+
             } catch (error) {
-                console.error('Ошибка загрузки медкарты:', error);
-                alert('Не удалось загрузить медкарту');
+                console.error("Error generating QR code:", error);
+                alert("Не удалось сгенерировать QR-код.");
             } finally {
                  button.disabled = false;
-                 button.textContent = originalText;
             }
         }
 
@@ -104,18 +124,18 @@ function setupPetCardButtons() {
 
             if (confirm(`Вы уверены, что хотите удалить питомца "${petName}"?`)) {
                 button.disabled = true;
+                const originalText = button.textContent;
                 button.textContent = 'Удаление...';
 
                 try {
                     await deletePet(petId);
                     const pets = await getPets();
                     renderPets(pets);
-                    setupPetCardButtons();
                 } catch (error) {
                     console.error('Ошибка при удалении питомца:', error);
-                    alert(`Не удалось удалить питомца: ${error.message}`);
+                    displayError(`Не удалось удалить питомца: ${error.message}`);
                     button.disabled = false;
-                    button.textContent = 'Удалить';
+                    button.textContent = originalText;
                 }
             }
         }
@@ -124,174 +144,6 @@ function setupPetCardButtons() {
     container.addEventListener('click', container._petCardActionListener);
 }
 
-function showMedicalCardModal(medicalCard, petId) {
-    //просмотр и редактирование
-    const viewModeHtml = `
-        <h6>Прививки:</h6>
-        <ul class="list-group mb-3" id="vaccinationsList">
-            ${medicalCard.vaccinations.map(vacc => `
-                <li class="list-group-item">
-                    <strong>${vacc.type}</strong> - ${vacc.date}
-                </li>
-            `).join('')}
-        </ul>
-        
-        <h6>Аллергии:</h6>
-        <div class="mb-3" id="allergiesView">
-            ${medicalCard.allergies.join(', ')}
-        </div>
-        
-        <h6>Хронические заболевания:</h6>
-        <div id="diseasesView">
-            ${medicalCard.diseases.join(', ')}
-        </div>
-    `;
-
-    const editModeHtml = `
-        <h6>Прививки:</h6>
-        <div class="mb-3">
-            <button class="btn btn-sm btn-success mb-2" id="addVaccinationBtn">+ Добавить прививку</button>
-            <div id="vaccinationsEdit">
-                ${medicalCard.vaccinations.map((vacc, index) => `
-                    <div class="input-group mb-2 vaccination-item">
-                        <input type="text" class="form-control" value="${vacc.type}" placeholder="Тип прививки">
-                        <input type="date" class="form-control" value="${vacc.date}">
-                        <button class="btn btn-outline-danger remove-vaccination" type="button">×</button>
-                    </div>
-                `).join('')}
-            </div>
-        </div>
-        
-        <h6>Аллергии:</h6>
-        <div class="mb-3">
-            <textarea class="form-control" id="allergiesEdit" rows="2">${medicalCard.allergies.join(', ')}</textarea>
-            <small class="text-muted">Перечислите через запятую</small>
-        </div>
-        
-        <h6>Хронические заболевания:</h6>
-        <div class="mb-3">
-            <textarea class="form-control" id="diseasesEdit" rows="2">${medicalCard.diseases.join(', ')}</textarea>
-            <small class="text-muted">Перечислите через запятую</small>
-        </div>
-    `;
-
-    const modalHtml = `
-        <div class="modal fade" id="medicalCardModal" tabindex="-1" aria-labelledby="medicalCardModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="medicalCardModalLabel">Медицинская карта</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div id="viewModeContent">
-                            ${viewModeHtml}
-                        </div>
-                        <div id="editModeContent" style="display: none;">
-                            ${editModeHtml}
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
-                        <button type="button" class="btn btn-outline-primary" id="editToggleBtn">Редактировать</button>
-                        <button type="button" class="btn btn-primary" id="saveChangesBtn" style="display: none;">Сохранить</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
-    document.body.insertAdjacentHTML('beforeend', modalHtml);
-    
-    const modal = new bootstrap.Modal(document.getElementById('medicalCardModal'));
-    const editToggleBtn = document.getElementById('editToggleBtn');
-    const saveChangesBtn = document.getElementById('saveChangesBtn');
-    const viewModeContent = document.getElementById('viewModeContent');
-    const editModeContent = document.getElementById('editModeContent');
-    
-    editToggleBtn.addEventListener('click', function() {
-        viewModeContent.style.display = 'none';
-        editModeContent.style.display = 'block';
-        editToggleBtn.style.display = 'none';
-        saveChangesBtn.style.display = 'block';
-    });
-    
-    saveChangesBtn.addEventListener('click', async function() {
-        try {
-            const updatedMedicalCard = {
-                vaccinations: Array.from(document.querySelectorAll('.vaccination-item')).map(item => ({
-                    type: item.querySelector('input[type="text"]').value,
-                    date: item.querySelector('input[type="date"]').value
-                })),
-                allergies: document.getElementById('allergiesEdit').value.split(',').map(item => item.trim()),
-                diseases: document.getElementById('diseasesEdit').value.split(',').map(item => item.trim())
-            };
-            
-            await updateMedicalCard(petId, updatedMedicalCard);
-            
-            viewModeContent.style.display = 'block';
-            editModeContent.style.display = 'none';
-            editToggleBtn.style.display = 'block';
-            saveChangesBtn.style.display = 'none';
-            
-            viewModeContent.innerHTML = `
-                <h6>Прививки:</h6>
-                <ul class="list-group mb-3">
-                    ${updatedMedicalCard.vaccinations.map(vacc => `
-                        <li class="list-group-item">
-                            <strong>${vacc.type}</strong> - ${vacc.date}
-                        </li>
-                    `).join('')}
-                </ul>
-                
-                <h6>Аллергии:</h6>
-                <div class="mb-3">
-                    ${updatedMedicalCard.allergies.join(', ')}
-                </div>
-                
-                <h6>Хронические заболевания:</h6>
-                <div>
-                    ${updatedMedicalCard.diseases.join(', ')}
-                </div>
-            `;
-            
-            alert('Изменения успешно сохранены');
-            
-        } catch (error) {
-            console.error('Ошибка при сохранении медкарты:', error);
-            alert(`Ошибка при сохранении: ${error.message}`);
-        }
-    });
-    
-    document.getElementById('addVaccinationBtn')?.addEventListener('click', function() {
-        const container = document.getElementById('vaccinationsEdit');
-        const newItem = document.createElement('div');
-        newItem.className = 'input-group mb-2 vaccination-item';
-        newItem.innerHTML = `
-            <input type="text" class="form-control" placeholder="Тип прививки">
-            <input type="date" class="form-control">
-            <button class="btn btn-outline-danger remove-vaccination" type="button">×</button>
-        `;
-        container.appendChild(newItem);
-        
-        newItem.querySelector('.remove-vaccination').addEventListener('click', function() {
-            container.removeChild(newItem);
-        });
-    });
-    
-    document.querySelectorAll('.remove-vaccination').forEach(btn => {
-        btn.addEventListener('click', function() {
-            this.closest('.vaccination-item').remove();
-        });
-    });
-    
-    modal.show();
-    
-    document.getElementById('medicalCardModal').addEventListener('hidden.bs.modal', function() {
-        this.remove();
-    });
-}
-
-//обработчик сохранения нового питомца
 document.getElementById('savePetBtn')?.addEventListener('click', async () => {
     const saveButton = document.getElementById('savePetBtn');
     const addPetModalElement = document.getElementById('addPetModal');
@@ -309,39 +161,66 @@ document.getElementById('savePetBtn')?.addEventListener('click', async () => {
         const petData = {
             name: document.getElementById('petName').value.trim(),
             kind: document.getElementById('petKind').value,
-            age: parseInt(document.getElementById('petAge').value, 10) || 0
+            age: parseFloat(document.getElementById('petAge').value) || 0
         };
+
+        if (!petData.name) throw new Error("Пожалуйста, введите имя питомца.");
+        if (!petData.kind) throw new Error("Пожалуйста, выберите вид питомца.");
+        if (isNaN(petData.age) || petData.age < 0) {
+             throw new Error("Пожалуйста, введите корректный возраст (0 или больше).");
+        }
 
         await createPet(petData);
 
         const modal = bootstrap.Modal.getInstance(addPetModalElement);
-
         addPetForm.reset();
 
-        modal.hide();
-
-        addPetModalElement.addEventListener('hidden.bs.modal', async () => {
-
+        const handleModalHidden = async () => {
+            document.body.style.overflow = 'auto';
+            document.body.style.paddingRight = '';
             const backdrops = document.querySelectorAll('.modal-backdrop');
             backdrops.forEach(backdrop => backdrop.remove());
             document.body.classList.remove('modal-open');
-            document.body.style.overflow = 'auto';
-            document.body.style.paddingRight = '0';
 
-            const pets = await getPets();
-            renderPets(pets);
-            setupMedicalCardButtons();
+            try {
+                const pets = await getPets();
+                renderPets(pets);
+            } catch (fetchError) {
+                console.error("Error fetching pets after add:", fetchError);
+                displayError(`Не удалось обновить список питомцев: ${fetchError.message}`);
+            } finally {
+                saveButton.disabled = false;
+                saveButton.textContent = 'Сохранить';
+            }
+        };
 
-            saveButton.disabled = false;
-            saveButton.textContent = 'Сохранить';
+        addPetModalElement.removeEventListener('hidden.bs.modal', handleModalHidden);
+        addPetModalElement.addEventListener('hidden.bs.modal', handleModalHidden, { once: true });
 
-        }, { once: true });
-
+        if (modal) {
+            modal.hide();
+        } else {
+             saveButton.disabled = false; 
+             saveButton.textContent = 'Сохранить';
+        }
 
     } catch (error) {
-        console.error('Error creating pet:', error);
         alert(`Ошибка при создании питомца: ${error.message || 'Неизвестная ошибка'}`);
         saveButton.disabled = false;
         saveButton.textContent = 'Сохранить';
     }
 });
+
+function displayError(message) {
+    const container = document.getElementById('petsList');
+    if (container) {
+        container.innerHTML = `
+            <div class="col-12">
+                <div class="alert alert-danger">${message}</div>
+            </div>
+        `;
+    } else {
+        console.error("Target container 'petsList' not found for error display.");
+        alert(message);
+    }
+}
