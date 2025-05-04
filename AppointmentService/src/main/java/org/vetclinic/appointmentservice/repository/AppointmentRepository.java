@@ -10,4 +10,6 @@ import java.util.Optional;
 @Repository
 public interface AppointmentRepository extends JpaRepository<Appointment, Long> {
     Optional<Appointment> findById(@NotNull Long Id);
+
+    boolean existsByDoctorIdAndSlotId(Long doctorId, Long slotId);
 }

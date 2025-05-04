@@ -3,14 +3,16 @@ package org.vetclinic.appointmentservice.model;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
-
 import java.time.OffsetDateTime;
 
 @Entity
 @Getter
 @Setter
 @NoArgsConstructor
-@Table(name = "Appointment")
+@Table(
+        name = "Appointment",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"slot_id", "doctor_id"})
+)
 public class Appointment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -22,8 +24,8 @@ public class Appointment {
     @Column(nullable = false)
     private Long doctorId;
 
-    @OneToOne
-    @JoinColumn(name = "slot_id", unique = true)
+    @ManyToOne
+    @JoinColumn(name = "slot_id")
     private TimeSlot slot;
 
     @Enumerated(EnumType.STRING)
@@ -36,5 +38,4 @@ public class Appointment {
 
     @Column()
     private String reason;
-
 }
