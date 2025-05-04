@@ -1,37 +1,15 @@
 import { renderNavBar } from "./utils/navBar.js";
+import { 
+    getPets, 
+    getMedicalCard, 
+    createPet, 
+    updateMedicalCard 
+} from "./api/api.js";
 
-// Тестовые данные питомцев
-const testPets = [
-    {
-        "petId": "1234567890abcdef",
-        "name": "Барсик",
-        "age": 3,
-        "kind": "Кот"
-    }
-];
-const testMedCard = [
-    {
-        "petId": "1234567890abcdef",
-        "vaccinations": [
-            {
-                "date": "2024-03-10",
-                "type": "Rabies"
-            },
-            {
-                "date": "2024-04-01",
-                "type": "Distemper"
-            }
-        ],
-        "allergies": [
-            "Pollen",
-            "Chicken"
-        ],
-        "diseases": [
-            "Diabetes",
-            "Arthritis"
-        ]
-    }
-];
+
+document.addEventListener("DOMContentLoaded", async () => {
+    await renderNavBar();
+});
 
 // Тестовые данные записей
 const testAppointments = [
@@ -45,22 +23,6 @@ const testAppointments = [
     }
 ];
 
-export async function getMedicalCard(petId) {
-    return new Promise(resolve => {
-        setTimeout(() => {
-            const card = testMedCard.find(card => card.petId === petId);
-            resolve(card || null);
-        }, 500);
-    });
-}
-
-// Функции для работы с питомцами
-export async function getPets() {
-    return new Promise(resolve => {
-        setTimeout(() => resolve(testPets), 500);
-    });
-}
-
 // Функции для работы с записями
 export async function getAppointments() {
     return new Promise(resolve => {
@@ -68,10 +30,6 @@ export async function getAppointments() {
     });
 }
 
-
-document.addEventListener("DOMContentLoaded", async () => {
-    await renderNavBar();
-});
 
 // Тестовые данные слотов
 const testSlots = [

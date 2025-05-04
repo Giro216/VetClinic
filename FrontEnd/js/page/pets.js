@@ -1,4 +1,5 @@
-import { getPets, getMedicalCard } from "../app.js";
+import { getPets, getMedicalCard, createPet, updateMedicalCard } from "../api/api.js";
+
 
 document.addEventListener("DOMContentLoaded", async () => {
     try {
@@ -9,11 +10,12 @@ document.addEventListener("DOMContentLoaded", async () => {
         console.error("Error loading pets:", error);
         document.getElementById('petsList').innerHTML = `
             <div class="col-12">
-                <div class="alert alert-danger">Ошибка загрузки питомцев</div>
+                <div class="alert alert-danger">Ошибка загрузки питомцев: ${error.message}</div>
             </div>
         `;
     }
 });
+
 
 function renderPets(pets) {
     const container = document.getElementById('petsList');
@@ -165,7 +167,7 @@ function showMedicalCardModal(medicalCard, petId) {
                 diseases: document.getElementById('diseasesEdit').value.split(',').map(item => item.trim())
             };
             
-            //await updateMedicalCard(petId, updatedMedicalCard);
+            await updateMedicalCard(petId, updatedMedicalCard);
             
             viewModeContent.style.display = 'block';
             editModeContent.style.display = 'none';
@@ -197,7 +199,7 @@ function showMedicalCardModal(medicalCard, petId) {
             
         } catch (error) {
             console.error('Ошибка при сохранении медкарты:', error);
-            alert('Не удалось сохранить изменения');
+            alert(`Ошибка при сохранении: ${error.message}`);
         }
     });
     
@@ -229,3 +231,58 @@ function showMedicalCardModal(medicalCard, petId) {
         this.remove();
     });
 }
+
+//обработчик сохранения нового питомца
+document.getElementById('savePetBtn')?.addEventListener('click', async () => {
+    const saveButton = document.getElementById('savePetBtn');
+    const addPetModalElement = document.getElementById('addPetModal');
+    const addPetForm = document.getElementById('addPetForm');
+
+    if (!addPetForm.checkValidity()) {
+         addPetForm.reportValidity();
+         return;
+    }
+
+    saveButton.disabled = true;
+    saveButton.textContent = 'Сохранение...';
+
+    try {
+        const petData = {
+            name: document.getElementById('petName').value.trim(),
+            kind: document.getElementById('petKind').value,
+            age: parseInt(document.getElementById('petAge').value, 10) || 0
+        };
+
+        await createPet(petData);
+
+        const modal = bootstrap.Modal.getInstance(addPetModalElement);
+
+        addPetForm.reset();
+
+        modal.hide();
+
+        addPetModalElement.addEventListener('hidden.bs.modal', async () => {
+
+            const backdrops = document.querySelectorAll('.modal-backdrop');
+            backdrops.forEach(backdrop => backdrop.remove());
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = 'auto';
+            document.body.style.paddingRight = '0';
+
+            const pets = await getPets();
+            renderPets(pets);
+            setupMedicalCardButtons();
+
+            saveButton.disabled = false;
+            saveButton.textContent = 'Сохранить';
+
+        }, { once: true });
+
+
+    } catch (error) {
+        console.error('Error creating pet:', error);
+        alert(`Ошибка при создании питомца: ${error.message || 'Неизвестная ошибка'}`);
+        saveButton.disabled = false;
+        saveButton.textContent = 'Сохранить';
+    }
+});
