@@ -5,7 +5,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.vetclinic.appointmentservice.repository.AppointmentRepository;
 import org.vetclinic.appointmentservice.service.AppointmentService;
 import org.vetclinic.appointmentservice.dto.*;
 import org.vetclinic.appointmentservice.model.Appointment;
@@ -17,28 +16,32 @@ import java.util.List;
 @RequestMapping("/appointments")
 public class AppointmentController {
 
-    private final AppointmentService service;
-    private final AppointmentRepository appointmentRepository;
+    private final AppointmentService appointmentService;
 
     @GetMapping("/")
     public ResponseEntity<List<Appointment>> getAllAppointments() {
-        return ResponseEntity.status(HttpStatus.OK).body(service.getAllAppointments());
+        return ResponseEntity.status(HttpStatus.OK).body(appointmentService.getAllAppointments());
     }
 
     @PostMapping("/")
     public ResponseEntity<AppointmentResponseDto> createAppointment(
             @RequestBody @Valid AppointmentRequestDto request) {
         try {
-            AppointmentResponseDto saved = service.createAppointment(request);
+            AppointmentResponseDto saved = appointmentService.createAppointment(request);
             return ResponseEntity.status(HttpStatus.CREATED).body(saved);
         } catch (Exception e) {
+            System.out.println(e.getMessage());
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
     }
 
     @DeleteMapping("/{appointmentId}")
-    public void deleteAppointment(@PathVariable @Valid Integer appointmentId) {
-        appointmentRepository.deleteById(appointmentId);
+    public void deleteAppointment(@PathVariable @Valid Long appointmentId) {
+        try {
+            appointmentService.deleteById(appointmentId);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 }
 
