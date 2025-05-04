@@ -44,9 +44,6 @@ dependencies {
     implementation("redis.clients:jedis:5.1.0")
     implementation("org.springframework.boot:spring-boot-starter-data-redis")
 
-    implementation("org.mapstruct:mapstruct:${mapstructVersion}")
-    annotationProcessor("org.mapstruct:mapstruct-processor:${mapstructVersion}")
-
 
 }
 
