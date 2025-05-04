@@ -1,5 +1,7 @@
 package org.vetclinic.appointmentservice.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
@@ -8,7 +10,9 @@ import org.vetclinic.appointmentservice.model.DoctorAvailability;
 import org.vetclinic.appointmentservice.model.TimeSlot;
 import org.vetclinic.appointmentservice.repository.DoctorAvailabilityRepository;
 import org.vetclinic.appointmentservice.repository.TimeSlotsRepository;
-
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.JedisPoolConfig;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Date;
@@ -20,8 +24,17 @@ import java.util.stream.StreamSupport;
 @AllArgsConstructor
 @Transactional
 public class TimeSlotService {
+
     TimeSlotsRepository timeSlotsRepository;
     DoctorAvailabilityRepository doctorAvailabilityRepository;
+    private final ObjectMapper objectMapper; // Для сериализации/десериализации JSON
+
+    public JedisPool jedisPool() {
+        JedisPoolConfig poolConfig = new JedisPoolConfig();
+        poolConfig.setMaxTotal(10); // Максимум 10 соединений
+        poolConfig.setMaxIdle(5);   // Максимум 5 неактивных соединений
+        return new JedisPool(poolConfig, "localhost", 6379); // Параметры подключения к Redis
+    }
 
     public List<TimeSlot> getAllSlots() {
         try {
@@ -42,6 +55,27 @@ public class TimeSlotService {
                 .map(DoctorAvailability::getSlotId)
                 .distinct()
                 .collect(Collectors.toList());
+    }
+
+    public List<Long> getCachedAvailableSlots() {
+        String cacheKey = "available_slots";
+
+        try(Jedis jedis = jedisPool().getResource()){
+            // Проверяем, есть ли данные в кеше
+            String cashedData = jedis.get(cacheKey);
+            if(cashedData != null){
+                return objectMapper.readValue(cashedData, objectMapper.getTypeFactory().constructCollectionType(List.class, Long.class));
+            }
+
+            // Если нет
+            List<Long> availableSlots = getAvailableSlots();
+            String serializedData = objectMapper.writeValueAsString(availableSlots);
+            jedis.setex(cacheKey, 10, serializedData);
+
+            return availableSlots;
+        }catch (JsonProcessingException e){
+            throw new EntityNotFoundException("Failed to fetch available slots: " + e.getMessage());
+        }
     }
 
     public List<Long> getAvailableSlotsByDate(Date date) {

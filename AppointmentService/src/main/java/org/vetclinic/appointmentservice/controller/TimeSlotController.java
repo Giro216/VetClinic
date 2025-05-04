@@ -43,13 +43,13 @@ public class TimeSlotController {
 
     @GetMapping("/available_slots_id")
     public ResponseEntity<List<Long>> getAvailableSlotsId(){
-        List<Long> timeSlots = timeSlotService.getAvailableSlots();
+        List<Long> timeSlots = timeSlotService.getCachedAvailableSlots();
         return new ResponseEntity<>(timeSlots, HttpStatus.OK);
     }
 
     @GetMapping("/available_slots")
     public ResponseEntity<List<TimeSlot>> getAvailableSlots(){
-        List<Long> timeSlots = timeSlotService.getAvailableSlots();
+        List<Long> timeSlots = timeSlotService.getCachedAvailableSlots();
         List<TimeSlot> timeSlotList = new ArrayList<>();
 
         for (Long slotId : timeSlots) {

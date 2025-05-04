@@ -20,21 +20,22 @@ public class RedisConfiguration {
             RedisConnectionFactory redisConnectionFactory
     ) {
         RedisCacheConfiguration config = RedisCacheConfiguration
-                .defaultCacheConfig()
-                .serializeKeysWith(
-                        RedisSerializationContext
-                                .SerializationPair
-                                .fromSerializer(new StringRedisSerializer())
-                )
-                .serializeValuesWith(
-                        RedisSerializationContext
-                                .SerializationPair
-                                .fromSerializer(new GenericJackson2JsonRedisSerializer())
-                );
+            .defaultCacheConfig()
+            .serializeKeysWith(
+                RedisSerializationContext
+                    .SerializationPair
+                    .fromSerializer(new StringRedisSerializer())
+            )
+            .serializeValuesWith(
+                RedisSerializationContext
+                    .SerializationPair
+                    .fromSerializer(new GenericJackson2JsonRedisSerializer())
+
+            )
+            .prefixCacheNameWith("appointment-service::");
 
         return RedisCacheManager.builder(redisConnectionFactory)
-                .cacheDefaults(config)
-                .build();
+            .cacheDefaults(config)
+            .build();
     }
-
 }
