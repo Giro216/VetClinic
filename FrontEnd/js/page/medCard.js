@@ -1,4 +1,5 @@
 import { getMedicalCard, updateMedicalCard } from "../api/Pets_api.js";
+import { getFoodRecommendations, getCareTips } from "../api/recommendation_api.js";
 
 let currentPetId = null;
 let originalMedicalCard = null;
@@ -14,17 +15,23 @@ const cancelEditBtn = document.getElementById('cancelEditBtn');
 const backBtn = document.getElementById('backBtn');
 const alertPlaceholder = document.getElementById('alertPlaceholder');
 
-document.addEventListener("DOMContentLoaded", () => {
+const foodRecommendationsList = document.getElementById('foodRecommendationsList');
+const careTipsList = document.getElementById('careTipsList');
+
+document.addEventListener("DOMContentLoaded", async () => {
     const urlParams = new URLSearchParams(window.location.search);
     currentPetId = urlParams.get('petId');
 
     if (!currentPetId) {
         showError("ID питомца не найден в URL.");
-        loadingIndicator.style.display = 'none';
+        showLoading(false);
         return;
     }
 
-    loadMedicalCard(currentPetId);
+    await loadMedicalCard(currentPetId);
+
+    await loadRecommendations(currentPetId);
+
     setupEventListeners();
 });
 
@@ -35,22 +42,41 @@ async function loadMedicalCard(petId) {
         const medicalCard = await getMedicalCard(petId);
         if (!medicalCard) {
              originalMedicalCard = { vaccinations: [], allergies: [], diseases: [] };
-             renderMedicalCard(originalMedicalCard);
-             pageTitle.textContent = `Медицинская карта (ID: ${petId}) - Запись не найдена, можно создать`;
+             pageTitle.textContent = `Медицинская карта (ID: ${petId}) - Запись не найдена`;
         } else {
              originalMedicalCard = JSON.parse(JSON.stringify(medicalCard));
              originalMedicalCard.vaccinations = originalMedicalCard.vaccinations || [];
              originalMedicalCard.allergies = originalMedicalCard.allergies || [];
              originalMedicalCard.diseases = originalMedicalCard.diseases || [];
-             renderMedicalCard(originalMedicalCard);
              pageTitle.textContent = `Медицинская карта (ID: ${petId})`;
         }
+        renderMedicalCard(originalMedicalCard);
+
+    } catch (error) {
+        console.error('Ошибка загрузки основной медкарты:', error);
+        showError(`Не удалось загрузить основную медкарту: ${error.message}`);
         showLoading(false);
         switchToViewMode();
+    }
+}
+
+async function loadRecommendations(petId) {
+    try {
+        const [foodRecommendations, careTips] = await Promise.all([
+            getFoodRecommendations(petId),
+            getCareTips(petId)
+        ]);
+
+        renderFoodRecommendations(foodRecommendations);
+        renderCareTips(careTips);
+
     } catch (error) {
-        console.error('Ошибка загрузки медкарты:', error);
-        showError(`Не удалось загрузить медкарту: ${error.message}`);
+        console.error('Ошибка загрузки рекомендаций:', error);
+        if (foodRecommendationsList) foodRecommendationsList.innerHTML = '<p class="text-danger">Не удалось загрузить рекомендации по корму.</p>';
+        if (careTipsList) careTipsList.innerHTML = '<p class="text-danger">Не удалось загрузить советы по уходу.</p>';
+    } finally {
         showLoading(false);
+        switchToViewMode();
     }
 }
 
@@ -60,31 +86,74 @@ function renderMedicalCard(medicalCard) {
 }
 
 function renderViewMode(medicalCard) {
-    viewModeContent.innerHTML = `
-        <h6>Прививки:</h6>
-        ${(medicalCard.vaccinations && medicalCard.vaccinations.length > 0) ? `
-            <ul class="list-group mb-3">
-                ${medicalCard.vaccinations.map(vacc => `
-                    <li class="list-group-item">
-                        <strong>${vacc.type || 'Тип не указан'}</strong> - ${vacc.date || 'Дата не указана'}
-                    </li>
-                `).join('')}
-            </ul>` : '<p class="text-muted">Нет данных о прививках.</p>'}
+    let vaccinationsViewContainer = viewModeContent.querySelector('#vaccinationsViewContainer');
+    if (!vaccinationsViewContainer) {
+        vaccinationsViewContainer = document.createElement('div');
+        vaccinationsViewContainer.id = 'vaccinationsViewContainer';
+        const foodSection = viewModeContent.querySelector('#foodRecommendationsSection');
+        if (foodSection) {
+             foodSection.parentNode.insertBefore(vaccinationsViewContainer, foodSection);
+        } else {
+             viewModeContent.appendChild(vaccinationsViewContainer);
+        }
+         vaccinationsViewContainer.insertAdjacentHTML('beforebegin', '<h6>Прививки:</h6>');
+    }
 
-        <h6>Аллергии:</h6>
+
+    let allergiesViewContainer = viewModeContent.querySelector('#allergiesViewContainer');
+    if (!allergiesViewContainer) {
+        allergiesViewContainer = document.createElement('div');
+        allergiesViewContainer.id = 'allergiesViewContainer';
+         vaccinationsViewContainer.insertAdjacentElement('afterend', allergiesViewContainer);
+         allergiesViewContainer.insertAdjacentHTML('beforebegin', '<h6>Аллергии:</h6>');
+    }
+
+
+     let diseasesViewContainer = viewModeContent.querySelector('#diseasesViewContainer');
+     if (!diseasesViewContainer) {
+         diseasesViewContainer = document.createElement('div');
+         diseasesViewContainer.id = 'diseasesViewContainer';
+          allergiesViewContainer.insertAdjacentElement('afterend', diseasesViewContainer);
+          diseasesViewContainer.insertAdjacentHTML('beforebegin', '<h6>Хронические заболевания:</h6>');
+     }
+
+
+    vaccinationsViewContainer.innerHTML = (medicalCard.vaccinations && medicalCard.vaccinations.length > 0) ? `
+        <ul class="list-group mb-3">
+            ${medicalCard.vaccinations.map(vacc => `
+                <li class="list-group-item">
+                    <strong>${vacc.type || 'Тип не указан'}</strong> - ${vacc.date || 'Дата не указана'}
+                </li>
+            `).join('')}
+        </ul>` : '<p class="text-muted">Нет данных о прививках.</p>';
+
+    allergiesViewContainer.innerHTML = `
         <div class="mb-3">
             ${(medicalCard.allergies && medicalCard.allergies.length > 0 && medicalCard.allergies.some(a => a.trim() !== ''))
                 ? medicalCard.allergies.filter(a => a.trim() !== '').join(', ')
                 : '<p class="text-muted">Нет данных об аллергиях.</p>'}
         </div>
-
-        <h6>Хронические заболевания:</h6>
-        <div>
-             ${(medicalCard.diseases && medicalCard.diseases.length > 0 && medicalCard.diseases.some(d => d.trim() !== ''))
-                ? medicalCard.diseases.filter(d => d.trim() !== '').join(', ')
-                : '<p class="text-muted">Нет данных о хронических заболеваниях.</p>'}
-        </div>
     `;
+
+     diseasesViewContainer.innerHTML = `
+         <div>
+              ${(medicalCard.diseases && medicalCard.diseases.length > 0 && medicalCard.diseases.some(d => d.trim() !== ''))
+                 ? medicalCard.diseases.filter(d => d.trim() !== '').join(', ')
+                 : '<p class="text-muted">Нет данных о хронических заболеваниях.</p>'}
+         </div>
+     `;
+
+     // Добавляем разделитель перед секциями рекомендаций, если они существуют
+     const hrSeparator = viewModeContent.querySelector('#separatorAfterBasicCard');
+     if (!hrSeparator) {
+        const hr = document.createElement('hr');
+        hr.id = 'separatorAfterBasicCard';
+        if (foodRecommendationsList && foodRecommendationsList.parentNode) {
+             foodRecommendationsList.parentNode.parentNode.insertBefore(hr, foodRecommendationsList.parentNode);
+        } else if (diseasesViewContainer) {
+             diseasesViewContainer.insertAdjacentElement('afterend', hr);
+        }
+     }
 }
 
 function renderEditMode(medicalCard) {
@@ -122,6 +191,56 @@ function renderVaccinationInput(vacc = { type: '', date: '' }, index) {
     `;
 }
 
+// для рендеринга рекомендаций по корму
+function renderFoodRecommendations(recommendations) {
+     if (!foodRecommendationsList) return;
+
+     if (!recommendations || recommendations.length === 0) {
+         foodRecommendationsList.innerHTML = '<p class="text-muted">Нет рекомендаций по корму.</p>';
+         return;
+     }
+
+     foodRecommendationsList.innerHTML = `
+         <ul class="list-group">
+             ${recommendations.map(rec => `
+                 <li class="list-group-item">
+                     <strong>${rec.name || 'Не указан'}</strong> (${rec.brand || 'Бренд не указан'})
+                     ${rec.description ? `<br><small class="text-muted">${rec.description}</small>` : ''}
+                 </li>
+             `).join('')}
+         </ul>
+     `;
+}
+
+function renderCareTips(tips) {
+     if (!careTipsList) return;
+
+     if (!tips || tips.length === 0) {
+         careTipsList.innerHTML = '<p class="text-muted">Нет советов по уходу.</p>';
+         return;
+     }
+
+     careTipsList.innerHTML = `
+         <div class="accordion" id="careTipsAccordion">
+             ${tips.map((tip, index) => `
+                 <div class="accordion-item">
+                     <h2 class="accordion-header" id="heading${index}">
+                         <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse${index}" aria-expanded="false" aria-controls="collapse${index}">
+                             ${tip.title || 'Совет'} (${tip.category || 'Общее'})
+                         </button>
+                     </h2>
+                     <div id="collapse${index}" class="accordion-collapse collapse" aria-labelledby="heading${index}" data-bs-parent="#careTipsAccordion">
+                         <div class="accordion-body">
+                             ${tip.content || 'Нет описания.'}
+                         </div>
+                     </div>
+                 </div>
+             `).join('')}
+         </div>
+     `;
+}
+
+
 function showLoading(isLoading) {
     if (isLoading) {
         loadingIndicator.style.display = 'block';
@@ -141,7 +260,7 @@ function setSaveButtonLoading(isLoading) {
     } else {
         saveChangesBtn.disabled = false;
         spinner.style.display = 'none';
-         saveChangesBtn.childNodes[saveChangesBtn.childNodes.length - 1].nodeValue = ' Сохранить'; 
+         saveChangesBtn.childNodes[saveChangesBtn.childNodes.length - 1].nodeValue = ' Сохранить';
     }
 }
 
@@ -178,14 +297,14 @@ function setupEventListeners() {
     });
 
     backBtn.addEventListener('click', () => {
-        window.history.back(); 
+        window.history.back();
     });
 }
 
 function setupEditModeListeners() {
     document.getElementById('addVaccinationBtn')?.addEventListener('click', () => {
         const container = document.getElementById('vaccinationsEditContainer');
-        const newIndex = container.children.length; // Simple index
+        const newIndex = container.children.length;
         const newItemHtml = renderVaccinationInput({ type: '', date: '' }, newIndex);
         container.insertAdjacentHTML('beforeend', newItemHtml);
 
@@ -195,7 +314,7 @@ function setupEditModeListeners() {
         });
     });
 
-    document.getElementById('vaccinationsEditContainer').addEventListener('click', function(event) {
+    document.getElementById('vaccinationsEditContainer')?.addEventListener('click', function(event) {
         if (event.target.classList.contains('remove-vaccination')) {
             event.target.closest('.vaccination-item').remove();
         }
@@ -212,17 +331,17 @@ async function handleSaveChanges() {
             vaccinations: Array.from(document.querySelectorAll('#vaccinationsEditContainer .vaccination-item')).map(item => ({
                 type: item.querySelector('.vaccination-type').value.trim(),
                 date: item.querySelector('.vaccination-date').value
-            })).filter(v => v.type || v.date), 
+            })).filter(v => v.type || v.date),
             allergies: document.getElementById('allergiesEdit').value.split(',')
                          .map(item => item.trim()).filter(item => item !== ''),
             diseases: document.getElementById('diseasesEdit').value.split(',')
-                        .map(item => item.trim()).filter(item => item !== '')
+                        .map(item => item.trim()).filter(item !== '')
         };
 
         await updateMedicalCard(currentPetId, updatedMedicalCard);
 
-        originalMedicalCard = JSON.parse(JSON.stringify(updatedMedicalCard)); 
-        renderViewMode(originalMedicalCard); 
+        originalMedicalCard = JSON.parse(JSON.stringify(updatedMedicalCard));
+        renderViewMode(originalMedicalCard);
         switchToViewMode();
         showAlert('Изменения успешно сохранены!', 'success');
 
@@ -242,7 +361,7 @@ function showAlert(message, type = 'danger') {
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     `;
-    alertPlaceholder.innerHTML = ''; 
+    alertPlaceholder.innerHTML = '';
     alertPlaceholder.append(wrapper);
 }
 
