@@ -15,7 +15,6 @@ import java.time.LocalDateTime;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 @Configuration
@@ -45,7 +44,7 @@ public class DataInitializer {
                     .with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
             List<LocalDate> days = IntStream.range(0, 5)
                     .mapToObj(monday::plusDays)
-                    .collect(Collectors.toList());
+                    .toList();
 
             // часы, кроме обеда
             List<Integer> hours = List.of(8,9,10,11,12, 14,15,16);
@@ -55,20 +54,24 @@ public class DataInitializer {
                 for (int h : hours) {
                     LocalDateTime start = date.atTime(h, 0);
 
+                    // Создаём TimeSlot без availabilities
                     TimeSlot slot = new TimeSlot();
                     slot.setStartTime(start);
+                    // Сохраняем TimeSlot, чтобы получить id
+                    slot = slotRepo.save(slot);
 
-                    // подготовим availabilities
+                    // Подготовим availabilities
                     List<DoctorAvailability> availList = new ArrayList<>();
                     for (Doctor doc : doctors) {
                         DoctorAvailability av = new DoctorAvailability();
-                        av.setSlot(slot);
+                        av.setSlotId(slot.getId()); // Теперь id доступен
                         av.setDoctor(doc);
                         av.setAvailable(true);
                         availList.add(av);
                     }
-                    slot.setAvailabilities(availList);
 
+                    // Устанавливаем availabilities и повторно сохраняем TimeSlot
+                    slot.setAvailabilities(availList);
                     slotRepo.save(slot);
                 }
             }

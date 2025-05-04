@@ -18,7 +18,8 @@ public class TimeSlot {
     @Column(name = "start_time", nullable = false)
     private LocalDateTime startTime;
 
-    @OneToMany(mappedBy = "slot", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(cascade = CascadeType.ALL)
+    @JoinColumn(name = "slot_id")
     private List<DoctorAvailability> availabilities;
 }
 

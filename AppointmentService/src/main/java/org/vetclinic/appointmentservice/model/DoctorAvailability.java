@@ -15,9 +15,9 @@ public class DoctorAvailability {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "slot_id", nullable = false)
-    private TimeSlot slot;
+    @Column(name = "slot_id", nullable = false)
+    //todo я поменял тип данных со slot на slotId и поэтому надо починить зависимости
+    private Long slotId;
 
     @ManyToOne
     @JoinColumn(name = "doctor_id", nullable = false)
