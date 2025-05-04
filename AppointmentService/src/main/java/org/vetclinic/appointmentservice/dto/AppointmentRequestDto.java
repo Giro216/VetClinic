@@ -7,6 +7,9 @@ public record AppointmentRequestDto(
     Integer petId,
 
     @NotNull
+    Long doctorId,
+
+    @NotNull
     Long requiredSlotId,
 
     String reason) implements Serializable{}

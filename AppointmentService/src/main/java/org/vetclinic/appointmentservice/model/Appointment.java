@@ -20,7 +20,7 @@ public class Appointment {
     private Long petId;
 
     @Column(nullable = false)
-    private String doctorName;
+    private Long doctorId;
 
     @OneToOne
     @JoinColumn(name = "slot_id", unique = true)
