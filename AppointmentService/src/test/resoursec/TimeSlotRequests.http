@@ -1,0 +1,58 @@
+# TimeSlotsRequests.http
+# Файл с HTTP-запросами для тестирования TimeSlotController
+# Предполагаемый базовый URL: http://localhost:8082
+# Используйте в IntelliJ IDEA HTTP Client, Postman или cURL
+
+### Получение всех временных слотов
+# Ожидаемый ответ: 200 OK, список всех TimeSlot в формате JSON
+GET http://localhost:8082/appointments/time_slots/
+Accept: application/json
+
+###
+
+### Получение временного слота по ID (существующий ID)
+# Замените 1 на действительный ID слота из вашей базы данных
+# Ожидаемый ответ: 200 OK, объект TimeSlot в формате JSON
+GET http://localhost:8082/appointments/time_slots/1
+Accept: application/json
+
+###
+
+### Получение временного слота по ID (несуществующий ID)
+# Замените 9999 на ID, которого нет в базе данных
+# Ожидаемый ответ: 404 Not Found (после исправления обработки ошибок)
+GET http://localhost:8082/appointments/time_slots/9999
+Accept: application/json
+
+###
+
+### Получение списка ID доступных слотов
+# Ожидаемый ответ: 200 OK, список ID (Long) доступных слотов в формате JSON
+GET http://localhost:8082/appointments/time_slots/available_slots_id
+Accept: application/json
+
+###
+
+### Получение списка доступных временных слотов
+# Ожидаемый ответ: 200 OK, список объектов TimeSlot, соответствующих доступным слотам
+GET http://localhost:8082/appointments/time_slots/available_slots
+Accept: application/json
+
+###
+
+### Получение списка ID доступных слотов на незарегистрированную дату
+# Ожидаемый ответ: 404 NOT FOUND, список ID (Long) доступных слотов на указанную дату
+GET http://localhost:8082/appointments/time_slots/available_slots_id_by_date?date=2025-05-29
+Accept: application/json
+
+### Получение списка ID доступных слотов на дату
+# Ожидаемый ответ: 200 OK, список ID (Long) доступных слотов на указанную дату
+GET http://localhost:8082/appointments/time_slots/available_slots_id_by_date?date=2025-04-29
+Accept: application/json
+
+###
+
+### Получение списка доступных временных слотов на дату
+# Ожидаемый ответ: 200 OK, список объектов TimeSlot на указанную дату
+GET http://localhost:8082/appointments/time_slots/available_slots_by_date?date=2025-04-29
+Accept: application/json
