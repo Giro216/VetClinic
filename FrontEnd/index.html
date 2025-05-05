@@ -4,102 +4,90 @@
 <head>
     <meta charset="UTF-8" />
     <title>Vet Clinic</title>
-    <!-- Bootstrap CSS -->
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-SgOJa3DmI69IUzQ2PVdRZhwQ+dy64/BUtbMJw1MZ8t5HZApcHrRKUc4W0kG879m7" crossorigin="anonymous">
     <link href="./css/style.css" rel="stylesheet">
+    <style>
+      body {
+          display: flex;
+          flex-direction: column;
+          min-height: 100vh;
+      }
+      main {
+          flex-grow: 1;
+          display: flex;
+          align-items: center;
+          padding: 2rem 0;
+      }
+      .action-card {
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        border-radius: 0.5rem;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+      }
+      .action-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+      }
+       .logo-icon {
+            font-size: 1.5rem;
+            margin-right: .5rem;
+        }
+    </style>
 </head>
 
 <body>
-    <div class="container">
-      <div id="nav-bar-main">
-      </div>
+  <div class="container">
+    <div id="nav-bar-main">
     </div>
 
-    <section class="hero-section bg-light py-5">
-      <div class="container text-center">
-        <h1 class="display-4 mb-4">Профессиональная забота о ваших питомцах</h1>
-        <p class="lead mb-4">Полный спектр ветеринарных услуг с индивидуальным подходом</p>
-
-        <div class="carousel-container">
-          <div id="mainCarousel" class="carousel carousel-dark slide">
-            <div class="carousel-indicators">
-              <button type="button" data-bs-target="#mainCarousel" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
-              <button type="button" data-bs-target="#mainCarousel" data-bs-slide-to="1" aria-label="Slide 2"></button>
-              <button type="button" data-bs-target="#mainCarousel" data-bs-slide-to="2" aria-label="Slide 3"></button>
-            </div>
-            <div class="carousel-inner">
-              <div class="carousel-item active" data-bs-interval="5000">
-                <img src="./assets/mainPage.jpg" class="d-block w-100" alt="Котик на приеме">
-              </div>
-              <div class="carousel-item" data-bs-interval="5000">
-                <img src="./assets/mainPage1.jpg" class="d-block w-100" alt="Собака на осмотре">
-              </div>
-              <div class="carousel-item">
-                <img src="./assets/mainPage2.jpg" class="d-block w-100" alt="Ветеринар с животным">
-              </div>
-            </div>
-            <button class="carousel-control-prev" type="button" data-bs-target="#mainCarousel" data-bs-slide="prev">
-              <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-              <span class="visually-hidden">Previous</span>
-            </button>
-            <button class="carousel-control-next" type="button" data-bs-target="#mainCarousel" data-bs-slide="next">
-              <span class="carousel-control-next-icon" aria-hidden="true"></span>
-              <span class="visually-hidden">Next</span>
-            </button>
-          </div>
-        </div>
-        
-        <div class="d-flex justify-content-center gap-3">
-          <a href="/page/appointments.html" class="btn btn-primary btn-lg">Записаться на прием</a>
-        </div>
-      </div>
-    </section> 
-
-    <section class="py-4"> 
+    <main class="py-5 bg-light">
       <div class="container">
-        <div class="row g-4 justify-content-center">
+        <h1 class="text-center mb-5 display-5">Панель управления</h1>
+
+        <div class="row justify-content-center g-4">
 
           <div class="col-md-6 col-lg-4">
-            <div class="card service-card h-100">
-              <img src="./assets/consult.webp" class="card-img-top" alt="Запись онлайн">
-              <div class="card-body text-center">
-                <h5 class="card-title">Запись онлайн</h5>
-                <p class="card-text">Выберите удобное время без очередей</p>
-                <a href="/page/appointments.html" class="btn btn-outline-primary">Записаться</a>
+            <div class="card action-card h-100">
+              <div class="card-body text-center d-flex flex-column justify-content-between">
+                <div>
+                  <h5 class="card-title">Добавить запись о приеме</h5>
+                  <p class="card-text text-muted">Внесите новую запись о посещении клиники</p>
+                </div>
+                <a href="/page/appointments.html" class="btn btn-primary btn-lg mt-3">Добавить запись</a>
               </div>
             </div>
           </div>
-          
+
           <div class="col-md-6 col-lg-4">
-            <div class="card service-card h-100">
-              <img src="./assets/helping.jpg" class="card-img-top" alt="Экстренная помощь">
-              <div class="card-body text-center">
-                <h5 class="card-title">Экстренная помощь</h5>
-                <p class="card-text">Круглосуточная служба неотложной помощи</p>
-                <a href="tel:+78001234567" class="btn btn-outline-danger">Позвонить</a>
+            <div class="card action-card h-100">
+               <div class="card-body text-center d-flex flex-column justify-content-between">
+                 <div>
+                    <h5 class="card-title">Добавить питомца</h5>
+                    <p class="card-text text-muted">Внесите данные нового питомца в базу</p>
+                 </div>
+                <a href="/page/pets.html" class="btn btn-success btn-lg mt-3">Добавить питомца</a>
               </div>
             </div>
           </div>
-          
+
           <div class="col-md-6 col-lg-4">
-            <div class="card service-card h-100">
-              <img src="./assets/emergency_assistance.jpg" class="card-img-top" alt="Консультация">
-              <div class="card-body text-center">
-                <h5 class="card-title">Консультация</h5>
-                <p class="card-text">Онлайн-консультация с ветеринаром</p>
-                <a href="tel:+78001234567" class="btn btn-outline-info">Задать вопрос</a>
+            <div class="card action-card h-100">
+              <div class="card-body text-center d-flex flex-column justify-content-between">
+                <div>
+                  <h5 class="card-title">Добавить рекомендацию</h5>
+                  <p class="card-text text-muted">Внесите рекомендации по уходу или еде в базу</p>
+                </div>
+                <a href="/page/recommendations.html" class="btn btn-info btn-lg mt-3">Добавить рекомендацию</a>
               </div>
             </div>
           </div>
+
         </div>
       </div>
-    </section>
+    </main>
+  </div>
 
-    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js" integrity="sha384-k6d4wzSIapyDyv1kpU366/PK5hCdSbCRGRCMv+eplOQJWyd1fbcAu9OCUj5zNLiq" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.min.js" integrity="sha384-VQqxDN0EQCkWoxt/0vsQvZswzTHUVOImccYmSyhJTp7kGtPed0Qcx8rK9h9YEgx+" crossorigin="anonymous"></script>
 
     <script src="js/app.js" type="module"></script>
 </body>

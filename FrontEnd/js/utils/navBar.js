@@ -24,14 +24,14 @@ export async function renderNavBar() {
               <a class="nav-link" href="/page/recommendations.html">Рекомендации</a>
             </li>
           </ul>
-           <div class="d-flex">
+           <!-- <div class="d-flex">
               <button type="button" class="btn btn-secondary">
                   <a href="/page/authorization.html" class="text-light text-decoration-none">Авторизация</a>
               </button>
               <button type="button" class="btn btn-primary ms-2">
                   <a href="/page/registration.html" class="text-light text-decoration-none">Регистрация</a>
-              </button>
-           </div>
+              </button> 
+           </div> -->
         </div>
   </nav>
   `
