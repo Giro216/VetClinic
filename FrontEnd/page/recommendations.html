@@ -2,129 +2,58 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Управление Рекомендациями</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Все Рекомендации</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-SgOJa3DmI69IUzQ2PVdRZhwQ+dy64/BUtbMJw1MZ8t5HZApcHrRKUc4W0kG879m7" crossorigin="anonymous">
+    <link href="../css/style.css" rel="stylesheet">
 </head>
 <body>
     <div class="container">
+
         <div id="nav-bar-main"></div>
-        <h2>Рекомендации</h2>
-        <hr>
 
-        <div id="alertPlaceholder"></div>
+        <main class="container mt-4">
+            <h1 class="mb-4">Все Рекомендации</h1>
+            <a href="/page/recommendations_add.html" class="btn btn-primary mb-3">Добавить Рекомендации</a>
+            <ul class="nav nav-tabs mb-3" id="recommendationsTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="care-tips-tab" data-bs-toggle="tab" data-bs-target="#care-tips-pane" type="button" role="tab" aria-controls="care-tips-pane" aria-selected="true">Советы по уходу</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="food-recommendations-tab" data-bs-toggle="tab" data-bs-target="#food-recommendations-pane" type="button" role="tab" aria-controls="food-recommendations-pane" aria-selected="false">Рекомендации по корму</button>
+                </li>
+            </ul>
 
-        <ul class="nav nav-tabs mb-3" id="recommendationsTabs" role="tablist">
-            <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="care-tip-tab" data-bs-toggle="tab" data-bs-target="#care-tip-pane" type="button" role="tab" aria-controls="care-tip-pane" aria-selected="true">
-                    Добавить Совет по уходу
-                </button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="food-tab" data-bs-toggle="tab" data-bs-target="#food-pane" type="button" role="tab" aria-controls="food-pane" aria-selected="false">
-                    Добавить Рекомендацию по корму
-                </button>
-            </li>
-        </ul>
+            <div class="tab-content" id="recommendationsTabsContent">
+                <div class="tab-pane fade show active" id="care-tips-pane" role="tabpanel" aria-labelledby="care-tips-tab" tabindex="0">
+                    <div id="careTipsListContainer">
+                        <div class="text-center py-4" id="careTipsLoading">
+                            <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Загрузка...</span></div>
+                        </div>
+                        <div id="careTipsError" class="alert alert-danger" style="display:none;"></div>
+                        <div id="careTipsEmpty" class="alert alert-info" style="display:none;">Нет доступных советов по уходу.</div>
+                        <div id="careTipsList" class="row g-3">
+                        </div>
+                    </div>
+                </div>
 
-        <div class="tab-content" id="recommendationsTabsContent">
-            <div class="tab-pane fade show active" id="care-tip-pane" role="tabpanel" aria-labelledby="care-tip-tab" tabindex="0">
-                <div class="card">
-                    <div class="card-body">
-                        <form id="addCareTipForm">
-                            <div class="mb-3">
-                                <label for="careTipTitle" class="form-label">Заголовок</label>
-                                <input type="text" class="form-control" id="careTipTitle" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="careTipContent" class="form-label">Содержание</label>
-                                <textarea class="form-control" id="careTipContent" rows="3" required></textarea>
-                            </div>
-                            <div class="mb-3">
-                                <label for="careTipCategory" class="form-label">Категория</label>
-                                <input type="text" class="form-control" id="careTipCategory" required>
-                            </div>
-                             <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label for="careTipMinAge" class="form-label">Мин. возраст (мес.)</label>
-                                    <input type="number" class="form-control" id="careTipMinAge" min="0">
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label for="careTipMaxAge" class="form-label">Макс. возраст (мес.)</label>
-                                    <input type="number" class="form-control" id="careTipMaxAge" min="0">
-                                </div>
-                            </div>
-                             <div class="mb-3">
-                                <label for="careTipSpecies" class="form-label">Применимо к видам</label>
-                                <select multiple class="form-select" id="careTipSpecies" size="4">
-                                    <option value="Собака">Собака</option>
-                                    <option value="Кошка">Кошка</option>
-                                    <option value="Попугай">Попугай</option>
-                                    <option value="Хомяк">Хомяк</option>
-                                    <option value="Другое">Другое</option>
-                                </select>
-                                <small class="form-text text-muted">Выберите один или несколько видов. Удерживайте Ctrl/Cmd для множественного выбора.</small>
-                            </div>
-                            <button type="submit" class="btn btn-primary" id="saveCareTipBtn">
-                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display: none;"></span>
-                                Сохранить Совет
-                            </button>
-                        </form>
+                <div class="tab-pane fade" id="food-recommendations-pane" role="tabpanel" aria-labelledby="food-recommendations-tab" tabindex="0">
+                    <div id="foodRecommendationsListContainer">
+                        <div class="text-center py-4" id="foodRecommendationsLoading">
+                            <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Загрузка...</span></div>
+                        </div>
+                        <div id="foodRecommendationsError" class="alert alert-danger" style="display:none;"></div>
+                        <div id="foodRecommendationsEmpty" class="alert alert-info" style="display:none;">Нет доступных рекомендаций по корму.</div>
+                        <div id="foodRecommendationsList" class="row g-3">
+                        </div>
                     </div>
                 </div>
             </div>
-
-             <div class="tab-pane fade" id="food-pane" role="tabpanel" aria-labelledby="food-tab" tabindex="0">
-                <div class="card">
-                    <div class="card-body">
-                         <form id="addFoodForm">
-                              <div class="mb-3">
-                                <label for="foodName" class="form-label">Название корма</label>
-                                <input type="text" class="form-control" id="foodName" required>
-                              </div>
-                              <div class="mb-3">
-                                <label for="foodBrand" class="form-label">Бренд</label>
-                                <input type="text" class="form-control" id="foodBrand" required>
-                              </div>
-                              <div class="mb-3">
-                                <label for="foodDescription" class="form-label">Описание</label>
-                                <textarea class="form-control" id="foodDescription" rows="2"></textarea>
-                              </div>
-                               <div class="row">
-                                   <div class="col-md-6 mb-3">
-                                       <label for="foodMinAge" class="form-label">Мин. возраст (мес.)</label>
-                                       <input type="number" class="form-control" id="foodMinAge" min="0">
-                                   </div>
-                                   <div class="col-md-6 mb-3">
-                                       <label for="foodMaxAge" class="form-label">Макс. возраст (мес.)</label>
-                                       <input type="number" class="form-control" id="foodMaxAge" min="0">
-                                   </div>
-                               </div>
-                               <div class="mb-3">
-                                   <label for="foodSpecies" class="form-label">Целевые виды</label>
-                                   <select multiple class="form-select" id="foodSpecies" size="4">
-                                        <option value="Собака">Собака</option>
-                                        <option value="Кошка">Кошка</option>
-                                        <option value="Попугай">Попугай</option>
-                                        <option value="Хомяк">Хомяк</option>
-                                        <option value="Другое">Другое</option>
-                                   </select>
-                                    <small class="form-text text-muted">Выберите один или несколько видов. Удерживайте Ctrl/Cmd для множественного выбора.</small>
-                               </div>
-                              <button type="submit" class="btn btn-primary" id="saveFoodBtn">
-                                   <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display: none;"></span>
-                                   Сохранить Корм
-                               </button>
-                         </form>
-                    </div>
-                </div>
-            </div>
-        </div>
+        </main>
     </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js"></script>
-
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js" integrity="sha384-k6d4wzSIapyDyv1kpU366/PK5hCdSbCRGRCMv+eplOQJWyd1fbcAu9OCUj5zNLiq" crossorigin="anonymous"></script>
     <script src="../js/app.js" type="module"></script>
     <script src="../js/api/recommendation_api.js" type="module"></script>
-    <script src="../js/page/recommendations.js" type="module"></script>
+    <script src="../js/page/recommendations-list.js" type="module"></script>
 </body>
 </html>
