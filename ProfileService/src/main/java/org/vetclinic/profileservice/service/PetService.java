@@ -9,7 +9,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -33,7 +32,9 @@ public class PetService {
     }
 
     public Pet savePet(Pet pet) {
-        pet.setPetId(UUID.randomUUID().toString());
+        if (pet.getPetId() == null || pet.getPetId().trim().isEmpty()) {
+            pet.setPetId(UUID.randomUUID().toString());
+        }
         return petRepo.save(pet);
     }
 
