@@ -15,7 +15,7 @@ import java.net.URI;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/users/{userId}/reminders")
+@RequestMapping("/recommendation/api/v1/users/{userId}/reminders")
 @RequiredArgsConstructor
 public class ReminderController {
 

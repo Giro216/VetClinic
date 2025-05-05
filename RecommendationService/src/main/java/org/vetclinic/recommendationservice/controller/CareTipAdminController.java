@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/v1/admin/care-tips")
+@RequestMapping("/recommendation/api/v1/admin/care-tips")
 @RequiredArgsConstructor
 public class CareTipAdminController {
 

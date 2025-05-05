@@ -3,8 +3,8 @@ info:
   title: PetCare Recommendation Service API
   version: 1.0.0
 servers:
-  - url: http://recommendation-service:8080/api/v1
-  - url: http://localhost:8080/api/v1
+  - url: http://localhost:8083/recommendation/api/v1
+  - url: http://recommendation-service:8080/recommendation/api/v1
 
 paths:
   # --- Pet CRUD ---

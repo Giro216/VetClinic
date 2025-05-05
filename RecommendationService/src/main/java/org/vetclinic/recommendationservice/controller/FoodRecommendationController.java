@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/v1/pets/{petId}/food-recommendations")
+@RequestMapping("/recommendation/api/v1/pets/{petId}/food-recommendations")
 @RequiredArgsConstructor
 public class FoodRecommendationController {
 

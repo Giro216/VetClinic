@@ -17,7 +17,7 @@ import java.util.UUID;
 
 
 @RestController
-@RequestMapping("/api/v1/admin/food")
+@RequestMapping("/recommendation/api/v1/admin/food")
 @RequiredArgsConstructor
 public class FoodAdminController {
 
