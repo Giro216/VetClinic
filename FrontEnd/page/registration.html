@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Vet Clinic</title>
+    <!-- Bootstrap CSS -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-SgOJa3DmI69IUzQ2PVdRZhwQ+dy64/BUtbMJw1MZ8t5HZApcHrRKUc4W0kG879m7" crossorigin="anonymous">
+</head>
+
+<body>
+    <div class="container">
+      <div id="nav-bar-main"></div>
+      <div class="container py-5">
+        <div class="registration-card card mx-auto p-4">
+            <div class="card-body">
+                <div class="text-center mb-4">  
+                    <h2>Регистрация</h2>
+                    <p class="text-muted">Создайте аккаунт для доступа к сервису</p>
+                </div>
+                
+                <form id="registrationForm" novalidate>
+                    <!-- Личные данные -->
+                    <div class="row mb-3">
+                        <div class="col-md-6 mb-3 mb-md-0">
+                            <label for="firstName" class="form-label">Имя</label>
+                            <input type="text" class="form-control" id="firstName" required>
+                            <div class="invalid-feedback">
+                                Пожалуйста, введите ваше имя
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="lastName" class="form-label">Фамилия</label>
+                            <input type="text" class="form-control" id="lastName" required>
+                            <div class="invalid-feedback">
+                                Пожалуйста, введите вашу фамилию
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Email -->
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="email" required>
+                        <div class="invalid-feedback">
+                            Пожалуйста, введите корректный email
+                        </div>
+                    </div>
+
+                    <!-- Пароль -->
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Пароль</label>
+                        <input type="password" class="form-control" id="password" required>
+                        <div class="invalid-feedback">
+                            Пароль должен содержать минимум 8 символов
+                        </div>
+                        <div class="form-text">Минимум 8 символов</div>
+                    </div>
+
+                    <!-- Подтверждение пароля -->
+                    <div class="mb-4">
+                        <label for="confirmPassword" class="form-label">Подтвердите пароль</label>
+                        <input type="password" class="form-control" id="confirmPassword" required>
+                        <div class="invalid-feedback">
+                            Пароли не совпадают
+                        </div>
+                    </div>
+
+                    <!-- Кнопка отправки -->
+                    <button type="submit" class="btn btn-primary btn-lg w-100 mb-3">
+                        Зарегистрироваться
+                    </button>
+
+                    <div class="text-center">
+                        <p class="mb-0">Уже есть аккаунт? <a href="/page/authorization.html">Войти</a></p>
+                    </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+      
+    </div>
+
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js" integrity="sha384-k6d4wzSIapyDyv1kpU366/PK5hCdSbCRGRCMv+eplOQJWyd1fbcAu9OCUj5zNLiq" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.min.js" integrity="sha384-VQqxDN0EQCkWoxt/0vsQvZswzTHUVOImccYmSyhJTp7kGtPed0Qcx8rK9h9YEgx+" crossorigin="anonymous"></script>
+
+    <script src="../js/app.js" type="module"></script>
+    <script src="../js/registrationValidation.js" type="module"></script>
+</body>
+
+</html>

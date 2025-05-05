@@ -1,0 +1,807 @@
+package org.vetclinic.appointmentservice;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class AppointmentServiceApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(AppointmentServiceApplication.class, args);
+    }
+
+}
+package org.vetclinic.appointmentservice.config;
+
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.vetclinic.appointmentservice.model.Doctor;
+import org.vetclinic.appointmentservice.model.DoctorAvailability;
+import org.vetclinic.appointmentservice.model.TimeSlot;
+import org.vetclinic.appointmentservice.repository.DoctorRepository;
+import org.vetclinic.appointmentservice.repository.TimeSlotsRepository;
+
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+@Configuration
+public class DataInitializer {
+
+    @Bean
+    public CommandLineRunner loadData(
+            DoctorRepository doctorRepo,
+            TimeSlotsRepository slotRepo
+    ) {
+        return args -> {
+            if (doctorRepo.count() > 0) {
+                return;
+            }
+
+            // 1) создаём 3 врачей
+            List<Doctor> doctors = List.of(
+                    new Doctor(null, "Иванов"),
+                    new Doctor(null, "Петров"),
+                    new Doctor(null, "Сидоров")
+            );
+            doctors = (List<Doctor>) doctorRepo.saveAll(doctors);
+
+            // 2) вычисляем даты текущего месяца (пон–пят)
+            LocalDate today = LocalDate.now();
+            LocalDate endDate = today.plusMonths(1);
+            List<LocalDate> workDays = new ArrayList<>();
+
+            LocalDate currentDate = today;
+            while (currentDate.isBefore(endDate)) {
+                DayOfWeek dayOfWeek = currentDate.getDayOfWeek();
+                if (dayOfWeek != DayOfWeek.SATURDAY && dayOfWeek != DayOfWeek.SUNDAY) {
+                    workDays.add(currentDate);
+                }
+                currentDate = currentDate.plusDays(1);
+            }
+
+            // часы, кроме обеда
+            List<Integer> hours = List.of(8,9,10,11,12,14,15,16);
+
+            // 3) для каждого дня и часа создаём TimeSlot + DoctorAvailability
+            for (LocalDate date : workDays) {
+                for (int h : hours) {
+                    LocalDateTime start = date.atTime(h, 0);
+
+                    TimeSlot slot = new TimeSlot();
+                    slot.setStartTime(start);
+                    slot = slotRepo.save(slot);
+
+                    List<DoctorAvailability> availList = new ArrayList<>();
+                    for (Doctor doc : doctors) {
+                        DoctorAvailability av = new DoctorAvailability();
+                        av.setSlotId(slot.getId());
+                        av.setDoctor(doc);
+                        av.setAvailable(true);
+                        availList.add(av);
+                    }
+
+                    slot.setAvailabilities(availList);
+                    slotRepo.save(slot);
+                }
+            }
+
+            System.out.println("=== Инициализация данных завершена ===");
+        };
+    }
+}package org.vetclinic.appointmentservice.config;
+
+import jakarta.annotation.PreDestroy;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.data.redis.cache.RedisCacheConfiguration;
+import org.springframework.data.redis.cache.RedisCacheManager;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
+import org.springframework.data.redis.serializer.RedisSerializationContext;
+import org.springframework.data.redis.serializer.StringRedisSerializer;
+import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.JedisPoolConfig;
+
+import java.time.Duration;
+
+@Configuration
+@EnableCaching
+public class RedisConfiguration {
+
+    @Bean
+    public CacheManager cacheManager(
+            RedisConnectionFactory redisConnectionFactory
+    ) {
+        RedisCacheConfiguration config = RedisCacheConfiguration
+            .defaultCacheConfig()
+            .serializeKeysWith(
+                RedisSerializationContext
+                    .SerializationPair
+                    .fromSerializer(new StringRedisSerializer())
+            )
+            .serializeValuesWith(
+                RedisSerializationContext
+                    .SerializationPair
+                    .fromSerializer(new GenericJackson2JsonRedisSerializer())
+
+            )
+            .prefixCacheNameWith("appointment-service::");
+
+        return RedisCacheManager.builder(redisConnectionFactory)
+            .cacheDefaults(config)
+            .build();
+    }
+}
+package org.vetclinic.appointmentservice.controller;
+
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.vetclinic.appointmentservice.service.AppointmentService;
+import org.vetclinic.appointmentservice.dto.*;
+import org.vetclinic.appointmentservice.model.Appointment;
+
+import java.util.List;
+
+@RestController
+@RequiredArgsConstructor
+@RequestMapping("/appointments")
+public class AppointmentController {
+
+    private final AppointmentService appointmentService;
+
+    @GetMapping("/")
+    public ResponseEntity<List<Appointment>> getAllAppointments() {
+        return ResponseEntity.status(HttpStatus.OK).body(appointmentService.getAllAppointments());
+    }
+
+    @PostMapping("/")
+    public ResponseEntity<AppointmentResponseDto> createAppointment(
+            @RequestBody @Valid AppointmentRequestDto request) {
+        try {
+            AppointmentResponseDto saved = appointmentService.createAppointment(request);
+            return ResponseEntity.status(HttpStatus.CREATED).body(saved);
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+    }
+
+    @DeleteMapping("/{appointmentId}")
+    public void deleteAppointment(@PathVariable @Valid Long appointmentId) {
+        try {
+            appointmentService.deleteById(appointmentId);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+}
+
+package org.vetclinic.appointmentservice.controller;
+
+import lombok.AllArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.vetclinic.appointmentservice.model.Doctor;
+import org.vetclinic.appointmentservice.repository.DoctorRepository;
+import java.util.List;
+
+@RestController
+@AllArgsConstructor
+@RequestMapping("/appointments/doctors")
+public class DoctorsController {
+    DoctorRepository doctorRepository;
+
+    @GetMapping
+    public ResponseEntity<List<Doctor>> getAllDoctors() {
+        List<Doctor> doctors = (List<Doctor>) doctorRepository.findAll();
+        if (doctors.isEmpty()) {
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        }
+        return new ResponseEntity<>(doctors, HttpStatus.OK);
+    }
+}
+package org.vetclinic.appointmentservice.controller;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping("/appointments")
+public class GatewayController {
+
+    @GetMapping("/hello")
+    public ResponseEntity<String> getAnonymous() {
+        return ResponseEntity.ok("Welcome to GeeksforGeeks");
+    }
+}package org.vetclinic.appointmentservice.controller;
+
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.validation.Valid;
+import lombok.AllArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.vetclinic.appointmentservice.model.TimeSlot;
+import org.vetclinic.appointmentservice.service.TimeSlotService;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+@RestController
+@AllArgsConstructor
+@RequestMapping("/appointments/time_slots")
+public class TimeSlotController {
+    private final TimeSlotService timeSlotService;
+
+    @GetMapping("/")
+    public ResponseEntity<List<TimeSlot>> getAllTimeSlots() {
+        List<TimeSlot> timeSlots;
+        try {
+            timeSlots = timeSlotService.getAllSlots();
+        } catch (Exception e) {
+            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+        }
+        return new ResponseEntity<>(timeSlots, HttpStatus.OK);
+    }
+
+    @GetMapping("/{slotId}")
+    public ResponseEntity<TimeSlot> getTimeSlotById(@PathVariable @Valid Long slotId) {
+        try {
+            TimeSlot timeSlot = timeSlotService.getTimeSlotById(slotId);
+            return new ResponseEntity<>(timeSlot, HttpStatus.OK);
+        } catch (EntityNotFoundException e) {
+            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @GetMapping("/available_slots_id")
+    public ResponseEntity<List<Long>> getAvailableSlotsId(){
+        List<Long> timeSlots = timeSlotService.getCachedAvailableSlots();
+        return new ResponseEntity<>(timeSlots, HttpStatus.OK);
+    }
+
+    @GetMapping("/available_slots")
+    public ResponseEntity<List<TimeSlot>> getAvailableSlots(){
+        List<Long> timeSlots = timeSlotService.getCachedAvailableSlots();
+        List<TimeSlot> timeSlotList = new ArrayList<>();
+
+        for (Long slotId : timeSlots) {
+            timeSlotList.add(timeSlotService.getTimeSlotById(slotId));
+        }
+
+        return new ResponseEntity<>(timeSlotList, HttpStatus.OK);
+    }
+
+    @GetMapping("/available_slots_id_by_date")
+    public ResponseEntity<List<Long>> getAvailableSlotsByDate(@RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date date) {
+        List<Long> slotIds = timeSlotService.getAvailableSlotsByDate(date);
+        if (slotIds.isEmpty()) {
+            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+        }
+        return new ResponseEntity<>(slotIds, HttpStatus.OK);
+    }
+
+    @GetMapping("/available_slots_by_date")
+    public ResponseEntity<List<TimeSlot>> getAvailableTimeSlotsByDate(@RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date date) {
+        List<TimeSlot> slots = timeSlotService.getAvailableTimeSlotsByDate(date);
+        if (slots.isEmpty()) {
+            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+        }
+        return new ResponseEntity<>(slots, HttpStatus.OK);
+    }
+
+}
+package org.vetclinic.appointmentservice.dto;
+
+import jakarta.validation.constraints.NotNull;
+import java.io.Serializable;
+
+public record AppointmentRequestDto(
+    Integer petId,
+
+    @NotNull
+    Long doctorId,
+
+    @NotNull
+    Long requiredSlotId,
+
+    String reason) implements Serializable{}
+
+package org.vetclinic.appointmentservice.dto;
+
+import java.io.Serializable;
+import java.time.OffsetDateTime;
+
+public record AppointmentResponseDto(
+     Long id,
+     Long petId,
+     String doctorName,
+     OffsetDateTime datetime,
+     String status,
+     OffsetDateTime createdAt) implements Serializable {}
+
+package org.vetclinic.appointmentservice.dto;
+
+import org.vetclinic.appointmentservice.model.Appointment;
+import org.springframework.stereotype.Component;
+import org.vetclinic.appointmentservice.model.AppointmentStatus;
+import org.vetclinic.appointmentservice.model.Doctor;
+import org.vetclinic.appointmentservice.model.TimeSlot;
+import org.vetclinic.appointmentservice.repository.DoctorRepository;
+
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
+import java.util.Optional;
+
+@Component
+public class ManualAppointmentMapper {
+
+    private final DoctorRepository doctorRepository;
+
+    public ManualAppointmentMapper(DoctorRepository doctorRepository) {
+        this.doctorRepository = doctorRepository;
+    }
+
+    /**
+     * Преобразует AppointmentRequestDto в сущность Appointment.
+     * Требуются объекты Doctor и TimeSlot для заполнения полей doctorName и slot.
+     *
+     * @param dto    Входной DTO с данными запроса на создание назначения
+     * @param slot   Сущность временного слота, полученная по requiredSlotId
+     * @return Сформированная сущность Appointment
+     */
+    public Appointment toEntity(AppointmentRequestDto dto, TimeSlot slot) {
+        Appointment appointment = new Appointment();
+
+        appointment.setPetId(dto.petId().longValue());
+        appointment.setDoctorId(dto.doctorId());
+        appointment.setSlot(slot);
+        appointment.setStatus(AppointmentStatus.BOOKED);
+        appointment.setReason(dto.reason());
+
+        return appointment;
+    }
+
+    /**
+     * Преобразует сущность Appointment в AppointmentResponseDto.
+     *
+     * @param appointment Сущность Appointment
+     * @return DTO с данными для ответа клиенту
+     */
+    public AppointmentResponseDto toDto(Appointment appointment) {
+        // Получаем startTime из TimeSlot и преобразуем в OffsetDateTime с учетом системной временной зоны
+        LocalDateTime startTime = appointment.getSlot().getStartTime();
+        OffsetDateTime datetime = startTime.atZone(ZoneId.systemDefault()).toOffsetDateTime();
+
+        Optional<Doctor> doctor = doctorRepository.findById(appointment.getDoctorId());
+        String doctorName = null;
+        if (doctor.isPresent()) {
+            doctorName = doctor.get().getName();
+        }
+
+        return new AppointmentResponseDto(
+                appointment.getId(),                    // ID назначения
+                appointment.getPetId(),                 // ID питомца
+                doctorName,                             // Имя доктора
+                datetime,                               // Дата и время из слота
+                appointment.getStatus().name(),         // Статус в виде строки
+                appointment.getCreatedAt()              // Время создания
+        );
+    }
+}
+package org.vetclinic.appointmentservice.model;
+
+import jakarta.persistence.*;
+import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import java.time.OffsetDateTime;
+
+@Entity
+@Getter
+@Setter
+@NoArgsConstructor
+@Table(
+        name = "Appointment",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"slot_id", "doctor_id"})
+)
+public class Appointment {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long Id;
+
+    @Column(nullable = false)
+    private Long petId;
+
+    @Column(nullable = false)
+    private Long doctorId;
+
+    @OneToOne
+    @JoinColumn(name = "slot_id")
+    private TimeSlot slot;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private AppointmentStatus status = AppointmentStatus.BOOKED;
+
+    @CreationTimestamp
+    @Column(nullable = false, updatable = false)
+    private OffsetDateTime createdAt;
+
+    @Column()
+    private String reason;
+}package org.vetclinic.appointmentservice.model;
+
+public enum AppointmentStatus {
+    BOOKED,
+    COMPLETED,
+    CANCELLED
+}
+package org.vetclinic.appointmentservice.model;
+
+import jakarta.persistence.*;
+import lombok.*;
+
+@Entity
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Table(name = "doctors")
+public class Doctor {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false)
+    private String name;
+}
+
+package org.vetclinic.appointmentservice.model;
+
+import jakarta.persistence.*;
+import lombok.*;
+
+@Entity
+@Getter
+@Setter
+@NoArgsConstructor
+@Table(name = "doctor_availability",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"slot_id", "doctor_id"}))
+public class DoctorAvailability {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = "slot_id", nullable = false)
+    //todo я поменял тип данных со slot на slotId и поэтому надо починить зависимости
+    private Long slotId;
+
+    @ManyToOne
+    @JoinColumn(name = "doctor_id", nullable = false)
+    private Doctor doctor;
+
+    @Column(nullable = false)
+    private boolean available;
+}
+
+package org.vetclinic.appointmentservice.model;
+
+import jakarta.persistence.*;
+import lombok.*;
+import java.time.LocalDateTime;
+import java.util.List;
+
+@Entity
+@Getter
+@Setter
+@NoArgsConstructor
+@Table(name = "time_slots")
+public class TimeSlot {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = "start_time", nullable = false)
+    private LocalDateTime startTime;
+
+    @OneToMany(cascade = CascadeType.ALL)
+    @JoinColumn(name = "slot_id")
+    private List<DoctorAvailability> availabilities;
+}
+
+
+package org.vetclinic.appointmentservice.repository;
+
+import jakarta.validation.constraints.NotNull;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+import org.vetclinic.appointmentservice.model.Appointment;
+
+import java.util.Optional;
+
+@Repository
+public interface AppointmentRepository extends JpaRepository<Appointment, Long> {
+    Optional<Appointment> findById(@NotNull Long Id);
+
+    boolean existsByDoctorIdAndSlotId(Long doctorId, Long slotId);
+}
+package org.vetclinic.appointmentservice.repository;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+import org.vetclinic.appointmentservice.model.DoctorAvailability;
+
+import java.util.List;
+
+@Repository
+public interface DoctorAvailabilityRepository extends JpaRepository<DoctorAvailability, Long> {
+    List<DoctorAvailability> findAllBySlotId(Long slotId);
+
+    List<DoctorAvailability> findByAvailableTrue();
+}
+package org.vetclinic.appointmentservice.repository;
+
+import org.springframework.data.repository.CrudRepository;
+import org.vetclinic.appointmentservice.model.Doctor;
+
+public interface DoctorRepository extends CrudRepository<Doctor, Long> {
+}
+package org.vetclinic.appointmentservice.repository;
+
+import org.springframework.data.repository.CrudRepository;
+import org.vetclinic.appointmentservice.model.TimeSlot;
+
+public interface TimeSlotsRepository extends CrudRepository<TimeSlot, Long> {
+}
+package org.vetclinic.appointmentservice.service;
+
+import jakarta.transaction.Transactional;
+import jakarta.validation.Valid;
+import lombok.AllArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.vetclinic.appointmentservice.dto.AppointmentRequestDto;
+import org.vetclinic.appointmentservice.dto.AppointmentResponseDto;
+import org.vetclinic.appointmentservice.dto.ManualAppointmentMapper;
+import org.vetclinic.appointmentservice.model.Appointment;
+import org.vetclinic.appointmentservice.model.DoctorAvailability;
+import org.vetclinic.appointmentservice.model.TimeSlot;
+import org.vetclinic.appointmentservice.repository.AppointmentRepository;
+import org.vetclinic.appointmentservice.repository.DoctorAvailabilityRepository;
+import org.vetclinic.appointmentservice.repository.TimeSlotsRepository;
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.JedisPoolConfig;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+@Service
+@AllArgsConstructor
+@Transactional
+public class AppointmentService {
+    private final AppointmentRepository appointmentRepository;
+    private final DoctorAvailabilityRepository doctorAvailabilityRepository;
+    private final TimeSlotsRepository timeSlotsRepository;
+    private final ManualAppointmentMapper appointmentMapper;
+    private final TimeSlotService timeSlotService;
+
+    public JedisPool jedisPool() {
+        JedisPoolConfig poolConfig = new JedisPoolConfig();
+        poolConfig.setMaxTotal(10); // Максимум 10 соединений
+        poolConfig.setMaxIdle(5);   // Максимум 5 неактивных соединений
+        return new JedisPool(poolConfig, "localhost", 6379); // Параметры подключения к Redis
+    }
+
+    public AppointmentResponseDto createAppointment(AppointmentRequestDto dto) {
+        try (Jedis jedis = jedisPool().getResource()) {
+            jedis.del("available_slots"); // Очищаем кеш
+            jedis.del("least_loaded_doctor:slot_" + dto.requiredSlotId()); // Очищаем кеш врача
+        }
+
+        // Проверяем существование слота
+        Optional<TimeSlot> currentTimeSlot = timeSlotsRepository.findById(dto.requiredSlotId());
+        if (currentTimeSlot.isEmpty()) {
+            throw new RuntimeException("Slot not found");
+        }
+
+        // Проверяем, что комбинация doctorId и slotId уникальна
+        if (appointmentRepository.existsByDoctorIdAndSlotId(dto.doctorId(), dto.requiredSlotId())) {
+            throw new RuntimeException("Doctor " + dto.doctorId() + " already booked for slot " + dto.requiredSlotId());
+        }
+
+        // Проверяем доступность слота
+        List<Long> availableSlots = timeSlotService.getAvailableSlots();
+        if (!availableSlots.contains(dto.requiredSlotId())) {
+            throw new RuntimeException("Slot not available");
+        }
+
+        // Проверяем и обновляем DoctorAvailability
+        Optional<DoctorAvailability> doctorAvailabilityOpt = doctorAvailabilityRepository
+                .findAllBySlotId(dto.requiredSlotId())
+                .stream()
+                .filter(da -> da.getDoctor().getId().equals(dto.doctorId()) && da.isAvailable())
+                .findFirst();
+
+        if (doctorAvailabilityOpt.isEmpty()) {
+            throw new RuntimeException("Doctor not available at slot " + currentTimeSlot.get().getStartTime());
+        }
+
+        DoctorAvailability doctorAvailability = doctorAvailabilityOpt.get();
+        doctorAvailability.setAvailable(false);
+        doctorAvailabilityRepository.save(doctorAvailability);
+
+        // Создаём и сохраняем запись
+        Appointment currentAppointment = appointmentRepository.save(appointmentMapper.toEntity(dto, currentTimeSlot.get()));
+        return appointmentMapper.toDto(currentAppointment);
+    }
+
+    public List<Appointment> getAllAppointments() {
+        return appointmentRepository.findAll();
+    }
+
+    public void deleteById(@Valid Long appointmentId) {
+        try (Jedis jedis = jedisPool().getResource()) {
+            jedis.del("available_slots"); // Очищаем кеш
+            Optional<Appointment> currentAppointment = appointmentRepository.findById(appointmentId);
+            // Очищаем кеш врача
+            currentAppointment.ifPresent(appointment -> jedis.del("least_loaded_doctor:slot_" + appointment.getSlot().getId()));
+        }
+
+        Optional<Appointment> currentAppointment = appointmentRepository.findById(appointmentId);
+        if (currentAppointment.isEmpty()) {
+            throw new RuntimeException("Appointment not found");
+        }
+
+        for (DoctorAvailability doctorAvailability : currentAppointment.get().getSlot().getAvailabilities()) {
+            if (doctorAvailability.getDoctor().getId().equals(currentAppointment.get().getDoctorId())) {
+                doctorAvailability.setAvailable(true);
+                doctorAvailabilityRepository.save(doctorAvailability);
+            }
+        }
+
+        appointmentRepository.deleteById(appointmentId);
+    }
+}
+package org.vetclinic.appointmentservice.service;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.persistence.Cacheable;
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
+import lombok.AllArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.stereotype.Service;
+import org.vetclinic.appointmentservice.model.DoctorAvailability;
+import org.vetclinic.appointmentservice.model.TimeSlot;
+import org.vetclinic.appointmentservice.repository.DoctorAvailabilityRepository;
+import org.vetclinic.appointmentservice.repository.TimeSlotsRepository;
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.JedisPoolConfig;
+
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.Date;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
+
+@Service
+@AllArgsConstructor
+@Transactional
+public class TimeSlotService {
+
+    TimeSlotsRepository timeSlotsRepository;
+    DoctorAvailabilityRepository doctorAvailabilityRepository;
+    private final ObjectMapper objectMapper; // Для сериализации/десериализации JSON
+
+    public JedisPool jedisPool() {
+        JedisPoolConfig poolConfig = new JedisPoolConfig();
+        poolConfig.setMaxTotal(10); // Максимум 10 соединений
+        poolConfig.setMaxIdle(5);   // Максимум 5 неактивных соединений
+        return new JedisPool(poolConfig, "localhost", 6379); // Параметры подключения к Redis
+    }
+
+    public List<TimeSlot> getAllSlots() {
+        try {
+            return (List<TimeSlot>) timeSlotsRepository.findAll();
+        }catch (Exception e) {
+            throw new EntityNotFoundException("Failed to fetch time slots: " + e.getMessage());
+        }
+    }
+
+    public TimeSlot getTimeSlotById(Long id) {
+        return timeSlotsRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("TimeSlot with ID " + id + " not found"));
+    }
+
+    public List<Long> getAvailableSlots() {
+        List<DoctorAvailability> available = doctorAvailabilityRepository.findByAvailableTrue();
+        return available.stream()
+                .map(DoctorAvailability::getSlotId)
+                .distinct()
+                .collect(Collectors.toList());
+    }
+
+    public List<Long> getCachedAvailableSlots() {
+        String cacheKey = "available_slots";
+
+        try(Jedis jedis = jedisPool().getResource()){
+            // Проверяем, есть ли данные в кеше
+            String cashedData = jedis.get(cacheKey);
+            if(cashedData != null){
+                return objectMapper.readValue(cashedData, objectMapper.getTypeFactory().constructCollectionType(List.class, Long.class));
+            }
+
+            // Если нет
+            List<Long> availableSlots = getAvailableSlots();
+            String serializedData = objectMapper.writeValueAsString(availableSlots);
+            jedis.setex(cacheKey, 10, serializedData);
+
+            return availableSlots;
+        }catch (JsonProcessingException e){
+            throw new EntityNotFoundException("Failed to fetch available slots: " + e.getMessage());
+        }
+    }
+
+    public List<Long> getAvailableSlotsByDate(Date date) {
+        // Преобразуем Date в LocalDate
+        LocalDate targetDate = date.toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDate();
+
+        // Получаем все TimeSlot за указанную дату
+        List<TimeSlot> slotsForDate = StreamSupport.stream(timeSlotsRepository.findAll().spliterator(), false)
+                .filter(slot -> slot.getStartTime().toLocalDate().equals(targetDate))
+                .toList();
+
+        // Получаем ID доступных слотов
+        return doctorAvailabilityRepository.findByAvailableTrue().stream()
+                .map(DoctorAvailability::getSlotId)
+                .filter(slotId -> slotsForDate.stream().anyMatch(slot -> slot.getId().equals(slotId)))
+                .distinct()
+                .collect(Collectors.toList());
+    }
+
+    public List<TimeSlot> getAvailableTimeSlotsByDate(Date date) {
+        // Преобразуем Date в LocalDate
+        LocalDate targetDate = date.toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDate();
+
+        // Получаем все TimeSlot за указанную дату
+        List<TimeSlot> slotsForDate = StreamSupport.stream(timeSlotsRepository.findAll().spliterator(), false)
+                .filter(slot -> slot.getStartTime().toLocalDate().equals(targetDate))
+                .toList();
+
+        // Фильтруем только те слоты, которые имеют доступные DoctorAvailability
+        return slotsForDate.stream()
+                .filter(slot -> doctorAvailabilityRepository.findByAvailableTrue().stream()
+                        .anyMatch(da -> da.getSlotId().equals(slot.getId())))
+                .collect(Collectors.toList());
+    }
+}

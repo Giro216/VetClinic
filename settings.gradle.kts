@@ -1,6 +1,7 @@
 rootProject.name = "VetClinic"
 
-include("GatewayService")
-include("ProfileService")
-include("AppointmentService")
-include("RecommendationService")
+//include("gateway-service")
+//include("profile-service")
+//include("appointment-service")
+//include("lab-service")
+//include("emergency-service")

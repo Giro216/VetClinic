@@ -1,0 +1,78 @@
+<!-- src/main/resources/static/js/appointments.html -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Vet Clinic</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <div id="nav-bar-main"></div>
+        <div class="container mt-4">
+            <h2>Мои записи</h2>
+            <button id="addAppointmentBtn" class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#appointmentModal">
+                Записаться на прием
+            </button>
+            <div id="appointmentsList" class="row">
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="appointmentModal" tabindex="-1" aria-labelledby="appointmentModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="appointmentModalLabel">Запись на прием</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="appointmentForm">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="petSelect" class="form-label">Питомец</label>
+                                <select class="form-select" id="petSelect" required>
+                                    <option value="" disabled selected>Выберите питомца</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="appointmentDate" class="form-label">Дата приема</label>
+                                <input type="date" class="form-control" id="appointmentDate" required disabled>
+                            </div>
+                        </div>
+
+                        <div class="mb-3" id="doctorSelectContainer" style="display: none;">
+                            <label for="doctorSelect" class="form-label">Врач</label>
+                            <select class="form-select" id="doctorSelect" required disabled>
+                                <option value="" disabled selected>Выберите врача</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="appointmentReason" class="form-label">Причина визита</label>
+                            <input type="text" class="form-control" id="appointmentReason" required>
+                        </div>
+
+                        <div id="slotsContainer" style="display: none;">
+                            <h5>Доступное время:</h5>
+                            <div class="slots-grid" id="slotsGrid">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+                    <button type="button" class="btn btn-primary" id="confirmAppointmentBtn" disabled>Подтвердить запись</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script src="../js/app.js" type="module"></script>
+    <script src="../js/api/Pets_api.js" type="module"></script>
+    <script src="../js/api/appointment_api.js" type="module"></script> 
+    <script src="../js/page/appointments.js" type="module"></script>
+</body>
+</html>
