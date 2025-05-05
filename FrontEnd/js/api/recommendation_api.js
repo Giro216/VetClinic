@@ -73,6 +73,130 @@ export async function getCareTips(petId) {
     }
 }
 
+export async function createFoodRecommendation(foodData) {
+     if (!foodData || !foodData.name || !foodData.brand) {
+        console.error("Неполные данные для создания рекомендации корма.");
+        throw new Error("Неполные данные для создания рекомендации корма.");
+     }
+    try {
+        const response = await fetch(`${API_BASE_URL_RECOMMENDATIONS}/admin/food`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify(foodData)
+        });
+
+        if (!response.ok) {
+             let errorBody = await response.text();
+             try {
+                 const jsonError = JSON.parse(errorBody);
+                  if (jsonError && jsonError.detail) {
+                      errorBody = jsonError.detail;
+                  }
+             } catch(e) {
+             }
+            throw new Error(`Ошибка HTTP при создании рекомендации корма: ${response.status} ${response.statusText}. ${errorBody}`);
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error(`Ошибка при создании рекомендации корма:`, error);
+        throw error;
+    }
+}
+
+export async function createCareTip(careTipData) {
+     if (!careTipData || !careTipData.title || !careTipData.content || !careTipData.category) {
+        console.error("Неполные данные для создания совета по уходу.");
+        throw new Error("Неполные данные для создания совета по уходу.");
+     }
+    try {
+        const response = await fetch(`${API_BASE_URL_RECOMMENDATIONS}/admin/care-tips`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify(careTipData)
+        });
+
+        if (!response.ok) {
+             let errorBody = await response.text();
+             try {
+                 const jsonError = JSON.parse(errorBody);
+                  if (jsonError && jsonError.detail) {
+                      errorBody = jsonError.detail;
+                  }
+             } catch(e) {
+             }
+            throw new Error(`Ошибка HTTP при создании совета по уходу: ${response.status} ${response.statusText}. ${errorBody}`);
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error(`Ошибка при создании совета по уходу:`, error);
+        throw error;
+    }
+}
+
+export async function getAllFoodRecommendations() {
+     try {
+         const response = await fetch(`${API_BASE_URL_RECOMMENDATIONS}/admin/food`, {
+             credentials: 'include',
+             headers: {
+                 'Accept': 'application/json'
+             }
+         });
+
+         if (!response.ok) {
+              let errorBody = await response.text();
+              try {
+                  const jsonError = JSON.parse(errorBody);
+                   if (jsonError && jsonError.detail) {
+                       errorBody = jsonError.detail;
+                   }
+              } catch(e) {}
+             throw new Error(`Ошибка HTTP при получении всех рекомендаций по корму: ${response.status} ${response.statusText}. ${errorBody}`);
+         }
+
+         return await response.json();
+     } catch (error) {
+         console.error(`Ошибка при получении всех рекомендаций по корму:`, error);
+         throw error;
+     }
+}
+
+export async function getAllCareTips() {
+     try {
+         const response = await fetch(`${API_BASE_URL_RECOMMENDATIONS}/admin/care-tips`, {
+             credentials: 'include',
+             headers: {
+                 'Accept': 'application/json'
+             }
+         });
+
+         if (!response.ok) {
+              let errorBody = await response.text();
+              try {
+                  const jsonError = JSON.parse(errorBody);
+                   if (jsonError && jsonError.detail) {
+                       errorBody = jsonError.detail;
+                   }
+              } catch(e) {}
+             throw new Error(`Ошибка HTTP при получении всех советов по уходу: ${response.status} ${response.statusText}. ${errorBody}`);
+         }
+
+         return await response.json();
+     } catch (error) {
+         console.error(`Ошибка при получении всех советов по уходу:`, error);
+         throw error;
+     }
+}
+
 
 const CURRENT_USER_ID = 1;
 
@@ -99,8 +223,7 @@ export async function createRecommendationPet(userId, petData) {
                   if (jsonError && jsonError.detail) {
                       errorBody = jsonError.detail;
                   }
-             } catch(e) {
-             }
+             } catch(e) {}
             throw new Error(`Ошибка HTTP при создании питомца в RecommendationService: ${response.status} ${response.statusText}. ${errorBody}`);
         }
 
@@ -113,7 +236,7 @@ export async function createRecommendationPet(userId, petData) {
 
 
 export async function getReminders(userId = CURRENT_USER_ID, status = null) {
-    try {
+     try {
         let url = `${API_BASE_URL_RECOMMENDATIONS}/users/${userId}/reminders`;
         if (status) {
             url += `?status=${encodeURIComponent(status)}`;
@@ -132,8 +255,7 @@ export async function getReminders(userId = CURRENT_USER_ID, status = null) {
                  if (jsonError && jsonError.detail) {
                      errorBody = jsonError.detail;
                  }
-            } catch(e) {
-            }
+            } catch(e) {}
             throw new Error(`Ошибка HTTP при получении напоминаний: ${response.status} ${response.statusText}. ${errorBody}`);
         }
 
@@ -167,8 +289,7 @@ export async function createReminder(userId = CURRENT_USER_ID, reminderData) {
                   if (jsonError && jsonError.detail) {
                       errorBody = jsonError.detail;
                   }
-             } catch(e) {
-             }
+             } catch(e) {}
             throw new Error(`Ошибка HTTP при создании напоминания: ${response.status} ${response.statusText}. ${errorBody}`);
         }
 
@@ -202,8 +323,7 @@ export async function updateReminder(userId = CURRENT_USER_ID, reminderId, updat
                   if (jsonError && jsonError.detail) {
                       errorBody = jsonError.detail;
                   }
-             } catch(e) {
-             }
+             } catch(e) {}
             throw new Error(`Ошибка HTTP при обновлении напоминания: ${response.status} ${response.statusText}. ${errorBody}`);
         }
 
@@ -229,16 +349,17 @@ export async function deleteReminder(userId = CURRENT_USER_ID, reminderId) {
              let errorBody = await response.text();
              try {
                  const jsonError = JSON.parse(errorBody);
-                  if (jsonJsonError && jsonJsonError.detail) {
+                  if (jsonError && jsonError.detail) {
                       errorBody = jsonError.detail;
                   }
-             } catch(e) {
-             }
+             } catch(e) {}
             throw new Error(`Ошибка HTTP при удалении напоминания: ${response.status} ${response.statusText}. ${errorBody}`);
         }
 
         if (response.status !== 204) {
              return await response.json();
+        } else {
+             return;
         }
 
 
@@ -268,8 +389,7 @@ export async function getReminderById(userId = CURRENT_USER_ID, reminderId) {
                  if (jsonError && jsonError.detail) {
                      errorBody = jsonError.detail;
                  }
-            } catch(e) {
-            }
+            } catch(e) {}
            throw new Error(`Ошибка HTTP при получении напоминания: ${response.status} ${response.statusText}. ${errorBody}`);
        }
 

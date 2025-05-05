@@ -20,6 +20,9 @@ export async function renderNavBar() {
             <li class="nav-item">
               <a class="nav-link" href="/page/appointments.html">Записи</a>
             </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/page/recommendations.html">Рекомендации</a>
+            </li>
           </ul>
            <div class="d-flex">
               <button type="button" class="btn btn-secondary">
