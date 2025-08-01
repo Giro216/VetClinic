@@ -12,6 +12,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/cards")
 @RequiredArgsConstructor
+@CrossOrigin(origins = "http://localhost:3001", allowCredentials = "true")
 public class MedCardController {
 
     private final MedCardService cardService;
