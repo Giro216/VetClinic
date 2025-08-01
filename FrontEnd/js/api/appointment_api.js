@@ -69,7 +69,7 @@ export async function getAvailableSlotsByDate(dateString) {
 
 export async function bookAppointment(slotId, doctorId, petId, reason) {
     const requestBody = {
-        petId: parseInt(petId, 10),
+        petId: petId, // Передаём как строку UUID
         doctorId: parseInt(doctorId, 10),
         requiredSlotId: parseInt(slotId, 10),
         reason: reason
