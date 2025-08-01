@@ -17,6 +17,7 @@ import java.util.List;
 @RestController
 @AllArgsConstructor
 @RequestMapping("/appointments/time_slots")
+@CrossOrigin(origins = "http://localhost:3001", allowCredentials = "true")
 public class TimeSlotController {
     private final TimeSlotService timeSlotService;
 

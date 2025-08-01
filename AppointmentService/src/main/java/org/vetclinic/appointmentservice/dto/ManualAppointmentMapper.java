@@ -32,7 +32,7 @@ public class ManualAppointmentMapper {
     public Appointment toEntity(AppointmentRequestDto dto, TimeSlot slot) {
         Appointment appointment = new Appointment();
 
-        appointment.setPetId(dto.petId().longValue());
+        appointment.setPetId(dto.petId());
         appointment.setDoctorId(dto.doctorId());
         appointment.setSlot(slot);
         appointment.setStatus(AppointmentStatus.BOOKED);

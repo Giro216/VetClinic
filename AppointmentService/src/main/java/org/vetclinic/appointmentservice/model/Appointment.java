@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import java.time.OffsetDateTime;
+import java.util.UUID;
 
 @Entity
 @Getter
@@ -19,7 +20,7 @@ public class Appointment {
     private Long Id;
 
     @Column(nullable = false)
-    private Long petId;
+    private UUID petId;
 
     @Column(nullable = false)
     private Long doctorId;
