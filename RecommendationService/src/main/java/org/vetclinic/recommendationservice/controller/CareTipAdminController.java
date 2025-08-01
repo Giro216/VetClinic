@@ -16,8 +16,9 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/recommendation/api/v1/admin/care-tips")
+@RequestMapping("/api/v1/admin/care-tips")
 @RequiredArgsConstructor
+@CrossOrigin(origins = "http://localhost:3001", allowCredentials = "true")
 public class CareTipAdminController {
 
     private final CareTipService careTipService;

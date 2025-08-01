@@ -1,0 +1,216 @@
+### ========================================
+### Переменные (установите свои значения)
+### ========================================
+@userId = 1
+@petId = c1b2a3d4-e5f6-7890-1234-abcdef123456  # Замените на ID, полученный после создания питомца
+@tipId = a1b2c3d4-e5f6-7890-1234-567890abcdef  # Замените на ID, полученный после создания совета
+@foodId = f1e2d3c4-b5a6-7890-1234-fedcba987654 # Замените на ID, полученный после создания корма
+@reminderId = 1                                # Замените на ID, полученный после создания напоминания
+
+### ========================================
+### Pet Management (User)
+### ========================================
+
+### Создать питомца для пользователя
+# Ожидаемый ответ: 201 Created
+# Заголовок: Location: http://localhost:8080/api/v1/users/{{userId}}/pets/{newPetId}
+# Тело: JSON объект UserPetResponseDto с данными созданного питомца (включая petId и ownerId)
+POST http://localhost:8080/api/v1/users/{{userId}}/pets
+Content-Type: application/json
+
+{
+  "name": "Рекс",
+  "birthDate": "2022-05-15",
+  "speciesName": "Собака",
+  "breedName": "Немецкая овчарка",
+  "allergyNames": ["Курица", "Пыльца"]
+}
+
+### Получить список питомцев пользователя
+# Ожидаемый ответ: 200 OK
+# Тело: JSON массив объектов UserPetResponseDto
+GET http://localhost:8080/api/v1/users/{{userId}}/pets
+
+### Получить конкретного питомца пользователя по ID
+# Ожидаемый ответ: 200 OK
+# Тело: JSON объект UserPetResponseDto для питомца с {{petId}}
+GET http://localhost:8080/api/v1/users/{{userId}}/pets/{{petId}}
+
+### Обновить информацию о питомце (частично)
+# Ожидаемый ответ: 200 OK
+# Тело: JSON объект UserPetResponseDto с обновленными данными
+PATCH http://localhost:8080/api/v1/users/{{userId}}/pets/{{petId}}
+Content-Type: application/json
+
+{
+  "name": "Рекс Великолепный",
+  "allergyNames": ["Курица", "Пыльца", "Блохи"] # Добавляем новую аллергию
+}
+
+### ========================================
+### Care Tips Recommendations (Read-only for Pet)
+### ========================================
+
+### Получить рекомендации по уходу для питомца
+# Ожидаемый ответ: 200 OK
+# Тело: JSON массив объектов CareTipResponseDto, подходящих для питомца {{petId}}
+GET http://localhost:8080/api/v1/pets/{{petId}}/care-tips
+
+
+### ========================================
+### Food Recommendations (Read-only for Pet)
+### ========================================
+
+### Получить рекомендации по корму для питомца
+# Ожидаемый ответ: 200 OK
+# Тело: JSON массив объектов FoodRecommendationResponseDto, подходящих для питомца {{petId}}
+GET http://localhost:8080/api/v1/pets/{{petId}}/food-recommendations
+
+
+### ========================================
+### Care Tips Management (Admin)
+### ========================================
+
+### Создать новый совет по уходу (Admin)
+# Ожидаемый ответ: 201 Created
+# Заголовок: Location: http://localhost:8080/api/v1/admin/care-tips/{newTipId}
+# Тело: JSON объект CareTipResponseDto с данными созданного совета (включая tipId)
+POST http://localhost:8080/api/v1/admin/care-tips
+Content-Type: application/json
+
+{
+  "title": "Уход за шерстью щенков",
+  "content": "Регулярно расчесывайте щенка мягкой щеткой.",
+  "category": "Уход за шерстью",
+  "minAgeMonths": 1,
+  "maxAgeMonths": 6,
+  "applicableSpeciesNames": ["Собака"],
+  "applicableBreedNames": [],
+  "relevantAllergyNames": []
+}
+
+### Получить все советы по уходу (Admin)
+# Ожидаемый ответ: 200 OK
+# Тело: JSON массив всех объектов CareTipResponseDto
+GET http://localhost:8080/api/v1/admin/care-tips
+
+### Получить конкретный совет по уходу по ID (Admin)
+# Ожидаемый ответ: 200 OK
+# Тело: JSON объект CareTipResponseDto для совета с {{tipId}}
+GET http://localhost:8080/api/v1/admin/care-tips/{{tipId}}
+
+### Обновить совет по уходу (Admin)
+# Ожидаемый ответ: 200 OK
+# Тело: JSON объект CareTipResponseDto с обновленными данными
+PATCH http://localhost:8080/api/v1/admin/care-tips/{{tipId}}
+Content-Type: application/json
+
+{
+  "content": "Регулярно расчесывайте щенка мягкой щеткой, особенно после прогулки.",
+  "maxAgeMonths": 8
+}
+
+
+
+### Удалить совет по уходу (Admin)
+# Ожидаемый ответ: 204 No Content
+# Тело: Пустое
+DELETE http://localhost:8080/api/v1/admin/care-tips/{{tipId}}
+
+
+### ========================================
+### Food Management (Admin)
+### ========================================
+
+### Создать новый корм (Admin)
+# Ожидаемый ответ: 201 Created
+# Заголовок: Location: http://localhost:8080/api/v1/admin/food/{newFoodId}
+# Тело: JSON объект FoodRecommendationResponseDto с данными созданного корма (включая foodId)
+POST http://localhost:8080/api/v1/admin/food
+Content-Type: application/json
+
+{
+  "name": "СуперКорм для щенков крупных пород",
+  "brand": "Здоровье+",
+  "description": "Сбалансированный корм для активного роста.",
+  "minAgeMonths": 2,
+  "maxAgeMonths": 12,
+  "targetSpeciesNames": ["Собака"],
+  "targetBreedNames": ["Немецкая овчарка", "Лабрадор"],
+  "ingredientNames": ["Говядина", "Рис", "Витамин A", "Витамин D"]
+}
+
+### Получить все корма (Admin)
+# Ожидаемый ответ: 200 OK
+# Тело: JSON массив всех объектов FoodRecommendationResponseDto
+GET http://localhost:8080/api/v1/admin/food
+
+### Получить конкретный корм по ID (Admin)
+# Ожидаемый ответ: 200 OK
+# Тело: JSON объект FoodRecommendationResponseDto для корма с {{foodId}}
+GET http://localhost:8080/api/v1/admin/food/{{foodId}}
+
+### Обновить корм (Admin)
+# Ожидаемый ответ: 200 OK
+# Тело: JSON объект FoodRecommendationResponseDto с обновленными данными
+PATCH http://localhost:8080/api/v1/admin/food/{{foodId}}
+Content-Type: application/json
+
+{
+  "description": "Улучшенная формула! Сбалансированный корм для активного роста.",
+  "ingredientNames": ["Говядина", "Рис", "Витамин A", "Витамин D", "Рыбий жир"]
+}
+
+### Удалить корм (Admin)
+# Ожидаемый ответ: 204 No Content
+# Тело: Пустое
+DELETE http://localhost:8080/api/v1/admin/food/{{foodId}}
+
+
+### ========================================
+### Reminders Management (User)
+### ========================================
+
+### Создать напоминание
+# Ожидаемый ответ: 201 Created
+# Заголовок: Location: http://localhost:8080/api/v1/users/{{userId}}/reminders/{newReminderId}
+# Тело: JSON объект ReminderResponseDto с данными созданного напоминания (включая id, petId, petName)
+POST http://localhost:8080/api/v1/users/{{userId}}/reminders
+Content-Type: application/json
+
+{
+  "type": "Вакцинация",
+  "description": "Ежегодная комплексная прививка",
+  "dueDate": "2024-09-15",
+  "petId": "{{petId}}" # Используйте ID питомца, созданного ранее
+}
+
+### Получить все напоминания для пользователя
+# Ожидаемый ответ: 200 OK
+# Тело: JSON массив объектов ReminderResponseDto для пользователя {{userId}}
+GET http://localhost:8080/api/v1/users/{{userId}}/reminders
+
+### Получить напоминания для пользователя со статусом PENDING
+# Ожидаемый ответ: 200 OK
+# Тело: JSON массив объектов ReminderResponseDto со статусом PENDING для пользователя {{userId}}
+GET http://localhost:8080/api/v1/users/{{userId}}/reminders?status=PENDING
+
+### Получить конкретное напоминание по ID
+# Ожидаемый ответ: 200 OK
+# Тело: JSON объект ReminderResponseDto для напоминания с {{reminderId}}
+GET http://localhost:8080/api/v1/users/{{userId}}/reminders/{{reminderId}}
+
+### Обновить напоминание (например, отметить выполненным)
+# Ожидаемый ответ: 200 OK
+# Тело: JSON объект ReminderResponseDto с обновленными данными (status=COMPLETED)
+PATCH http://localhost:8080/api/v1/users/{{userId}}/reminders/{{reminderId}}
+Content-Type: application/json
+
+{
+  "status": "COMPLETED"
+}
+
+### Удалить напоминание
+# Ожидаемый ответ: 204 No Content
+# Тело: Пустое
+DELETE http://localhost:8080/api/v1/users/{{userId}}/reminders/{{reminderId}}

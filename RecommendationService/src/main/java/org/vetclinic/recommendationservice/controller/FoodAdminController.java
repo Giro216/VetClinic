@@ -17,8 +17,9 @@ import java.util.UUID;
 
 
 @RestController
-@RequestMapping("/recommendation/api/v1/admin/food")
+@RequestMapping("/api/v1/admin/food")
 @RequiredArgsConstructor
+@CrossOrigin(origins = "http://localhost:3001", allowCredentials = "true")
 public class FoodAdminController {
 
     private final FoodRecommendationService foodRecommendationService;

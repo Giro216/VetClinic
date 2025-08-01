@@ -15,8 +15,9 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/recommendation/api/v1/users/{userId}/pets")
+@RequestMapping("/api/v1/users/{userId}/pets")
 @RequiredArgsConstructor
+@CrossOrigin(origins = "http://localhost:3001", allowCredentials = "true")
 public class UserPetController {
 
     private final UserPetService userPetService;
