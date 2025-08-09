@@ -1,0 +1,44 @@
+services:
+  appointment-service:
+    build:
+      context: ./AppointmentService
+      dockerfile: Dockerfile
+    ports:
+      - "8082:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/bookingSlots
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: password
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      SPRING_REDIS_CLIENT_TYPE: jedis
+      SPRING_REDIS_TYPE: redis
+      SPRING_JPA_HIBERNATE_DDL_AUTO: create-drop
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - jec-network
+
+  postgres:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: bookingSlots
+    ports:
+      - "5433:5432"
+    networks:
+      - jec-network
+  redis:
+    image: redis:7.2
+    container_name: redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+    networks:
+      - jec-network
+
+networks:
+  jec-network:
+    driver: bridge
