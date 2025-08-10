@@ -1,4 +1,4 @@
-const API_BASE_URL_APPOINTMENTS = 'http://localhost:8082';
+const API_BASE_URL_APPOINTMENTS = 'http://localhost:8090';
 
 export async function getDoctors() {
     try {
