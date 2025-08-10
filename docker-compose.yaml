@@ -39,6 +39,56 @@ services:
     networks:
       - jec-network
 
+  profile-service:
+    build:
+      context: ./ProfileService
+      dockerfile: Dockerfile
+    ports:
+      - "8081:8080"
+    environment:
+      SPRING_MONGODB_URI: mongodb://mongodb:27017/VetClinic
+      SPRING_MONGODB_DATABASE: VetClinic
+    depends_on:
+      - mongodb
+    networks:
+      - jec-network
+
+  mongodb:
+    image: mongo:8.0
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: VetClinic
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - jec-network
+
+  recommendation-service:
+    build:
+      context: ./RecommendationService
+      dockerfile: Dockerfile
+    ports:
+      - "8083:8080"
+    depends_on:
+      - neo4j
+    networks:
+      - jec-network
+
+  neo4j:
+    image: 'neo4j:latest'
+    environment:
+      - 'NEO4J_AUTH=neo4j/notverysecret'
+    ports:
+      - '7687:7687'
+      - '7474:7474' # Neo4J Browser
+    networks:
+      - jec-network
+
 networks:
   jec-network:
     driver: bridge
+
+volumes:
+  mongodb_data:
