@@ -1,3 +1,5 @@
+#TODO переделать под новые контроллеры
+
 openapi: 3.0.3
 info:
   title: Profile Service API
