@@ -1,4 +1,4 @@
-const API_BASE_URL_RECOMMENDATIONS = 'http://localhost:8090api/v1';
+const API_BASE_URL_RECOMMENDATIONS = 'http://localhost:8083/api/v1';
 
 export async function getFoodRecommendations(petId) {
     if (!petId) {

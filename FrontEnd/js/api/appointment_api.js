@@ -1,4 +1,4 @@
-const API_BASE_URL_APPOINTMENTS = 'http://localhost:8090';
+const API_BASE_URL_APPOINTMENTS = 'http://localhost:8082';
 
 export async function getDoctors() {
     try {
@@ -50,7 +50,7 @@ export async function getAvailableSlotsByDate(dateString) {
              }
         });
 
-        if (response.status === 404) {
+        if (response.status === 204) {
             console.warn(`Нет доступных слотов на дату ${dateString}`);
             return [];
         }
