@@ -28,7 +28,7 @@ public class DataInitializer {
                 return;
             }
 
-            // 1) создаём 3 врачей
+            // создаём 3 врачей
             List<Doctor> doctors = List.of(
                     new Doctor(null, "Иванов"),
                     new Doctor(null, "Петров"),
@@ -36,7 +36,7 @@ public class DataInitializer {
             );
             doctors = (List<Doctor>) doctorRepo.saveAll(doctors);
 
-            // 2) вычисляем даты текущего месяца (пон–пят)
+            // вычисляем даты текущего месяца (пнд–птн)
             LocalDate today = LocalDate.now();
             LocalDate endDate = today.plusMonths(1);
             List<LocalDate> workDays = new ArrayList<>();
@@ -53,7 +53,7 @@ public class DataInitializer {
             // часы, кроме обеда
             List<Integer> hours = List.of(8,9,10,11,12,14,15,16);
 
-            // 3) для каждого дня и часа создаём TimeSlot + DoctorAvailability
+            // для каждого дня и часа создаём TimeSlot + DoctorAvailability
             for (LocalDate date : workDays) {
                 for (int h : hours) {
                     LocalDateTime start = date.atTime(h, 0);
