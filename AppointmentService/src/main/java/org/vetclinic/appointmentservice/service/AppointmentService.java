@@ -3,6 +3,7 @@ package org.vetclinic.appointmentservice.service;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.vetclinic.appointmentservice.dto.AppointmentRequestDto;
 import org.vetclinic.appointmentservice.dto.AppointmentResponseDto;
@@ -13,9 +14,7 @@ import org.vetclinic.appointmentservice.model.TimeSlot;
 import org.vetclinic.appointmentservice.repository.AppointmentRepository;
 import org.vetclinic.appointmentservice.repository.DoctorAvailabilityRepository;
 import org.vetclinic.appointmentservice.repository.TimeSlotsRepository;
-import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisPool;
-import redis.clients.jedis.JedisPoolConfig;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -28,19 +27,12 @@ public class AppointmentService {
     private final TimeSlotsRepository timeSlotsRepository;
     private final ManualAppointmentMapper appointmentMapper;
     private final TimeSlotService timeSlotService;
-
-    public JedisPool jedisPool() {
-        JedisPoolConfig poolConfig = new JedisPoolConfig();
-        poolConfig.setMaxTotal(10); // Максимум 10 соединений
-        poolConfig.setMaxIdle(5);   // Максимум 5 неактивных соединений
-        return new JedisPool(poolConfig, "localhost", 6379); // Параметры подключения к Redis
-    }
+    private final StringRedisTemplate redisTemplate;
 
     public AppointmentResponseDto createAppointment(AppointmentRequestDto dto) {
-        try (Jedis jedis = jedisPool().getResource()) {
-            jedis.del("available_slots"); // Очищаем кеш
-            jedis.del("least_loaded_doctor:slot_" + dto.requiredSlotId()); // Очищаем кеш врача
-        }
+        // Чистим кэш перед созданием записи
+        redisTemplate.delete("available_slots");
+        redisTemplate.delete("least_loaded_doctor:slot_" + dto.requiredSlotId());
 
         // Проверяем существование слота
         Optional<TimeSlot> currentTimeSlot = timeSlotsRepository.findById(dto.requiredSlotId());
@@ -53,7 +45,7 @@ public class AppointmentService {
             throw new RuntimeException("Doctor " + dto.doctorId() + " already booked for slot " + dto.requiredSlotId());
         }
 
-        // Проверяем доступность слота
+        // Проверяем доступность слота (через кеш/БД)
         List<Long> availableSlots = timeSlotService.getCachedAvailableSlots();
         if (!availableSlots.contains(dto.requiredSlotId())) {
             throw new RuntimeException("Slot not available");
@@ -75,7 +67,9 @@ public class AppointmentService {
         doctorAvailabilityRepository.save(doctorAvailability);
 
         // Создаём и сохраняем запись
-        Appointment currentAppointment = appointmentRepository.save(appointmentMapper.toEntity(dto, currentTimeSlot.get()));
+        Appointment currentAppointment = appointmentRepository.save(
+                appointmentMapper.toEntity(dto, currentTimeSlot.get())
+        );
         return appointmentMapper.toDto(currentAppointment);
     }
 
@@ -84,14 +78,14 @@ public class AppointmentService {
     }
 
     public void deleteById(@Valid Long appointmentId) {
-        try (Jedis jedis = jedisPool().getResource()) {
-            jedis.del("available_slots"); // Очищаем кеш
-            Optional<Appointment> currentAppointment = appointmentRepository.findById(appointmentId);
-            // Очищаем кеш врача
-            currentAppointment.ifPresent(appointment -> jedis.del("least_loaded_doctor:slot_" + appointment.getSlot().getId()));
-        }
+        // Чистим кэш
+        redisTemplate.delete("available_slots");
 
         Optional<Appointment> currentAppointment = appointmentRepository.findById(appointmentId);
+        currentAppointment.ifPresent(appointment ->
+                redisTemplate.delete("least_loaded_doctor:slot_" + appointment.getSlot().getId())
+        );
+
         if (currentAppointment.isEmpty()) {
             throw new RuntimeException("Appointment not found");
         }

@@ -1,0 +1,130 @@
+services:
+
+#=================== Appointment service ===================
+
+  appointment-service:
+    build:
+      context: ./AppointmentService
+      dockerfile: Dockerfile
+    ports:
+      - "8082:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/bookingSlots
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: password
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      SPRING_REDIS_CLIENT_TYPE: jedis
+      SPRING_REDIS_TYPE: redis
+      SPRING_JPA_HIBERNATE_DDL_AUTO: create-drop
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - jec-network
+
+  postgres:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: bookingSlots
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - jec-network
+  redis:
+    image: redis:7.2
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - jec-network
+
+#=================== Profile service ===================
+
+  profile-service:
+    build:
+      context: ./ProfileService
+      dockerfile: Dockerfile
+    ports:
+      - "8081:8080"
+    environment:
+      SPRING_MONGODB_URI: mongodb://mongodb:27017/VetClinic
+      SPRING_MONGODB_DATABASE: VetClinic
+    depends_on:
+      - mongodb
+    networks:
+      - jec-network
+
+  mongodb:
+    image: mongo:8.0
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: VetClinic
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - jec-network
+
+#=================== Recommendation service ===================
+
+  recommendation-service:
+    build:
+      context: ./RecommendationService
+      dockerfile: Dockerfile
+    ports:
+      - "8083:8080"
+    environment:
+      SPRING_NEO4J_URI: bolt://neo4j:7687
+      SPRING_NEO4J_AUTH_USERNAME: neo4j
+      SPRING_NEO4J_AUTH_PASSWORD: notverysecret
+    depends_on:
+      - neo4j
+    networks:
+      - jec-network
+
+  neo4j:
+    image: 'neo4j:latest'
+    environment:
+      - 'NEO4J_AUTH=neo4j/notverysecret'
+    ports:
+      - '7687:7687'
+      - '7474:7474' # Neo4J Browser
+    networks:
+      - jec-network
+
+#=================== FrontEnd ===================
+
+  frontend:
+    build:
+      context: ./FrontEnd
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3000"
+    depends_on:
+      - appointment-service
+      - profile-service
+      - recommendation-service
+    networks:
+      - jec-network
+
+networks:
+  jec-network:
+    driver: bridge
+
+volumes:
+  mongodb_data:
