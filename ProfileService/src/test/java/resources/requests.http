@@ -1,11 +1,11 @@
 # VetClinicRequests.http
 # Файл с HTTP-запросами для тестирования MedCardController и PetController
-# Предполагаемый базовый URL: http://localhost:8080
+# Предполагаемый базовый URL: http://localhost:8081
 # Используйте в IntelliJ IDEA HTTP Client, Postman или cURL
 
 ### Получение всех медицинских карт
 # Ожидаемый ответ: 200 OK, список всех MedCard в формате JSON
-GET http://localhost:8080/api/cards/all
+GET http://localhost:8081/api/cards/all
 Accept: application/json
 
 ###
@@ -13,7 +13,7 @@ Accept: application/json
 ### Получение медицинской карты по ID (существующий ID)
 # Замените card1 на действительный ID медицинской карты из вашей базы данных
 # Ожидаемый ответ: 200 OK, объект MedCard в формате JSON
-GET http://localhost:8080/api/cards/card1
+GET http://localhost:8081/api/cards/card1
 Accept: application/json
 
 ###
@@ -21,14 +21,14 @@ Accept: application/json
 ### Получение медицинской карты по ID (несуществующий ID)
 # Замените nonexistent на ID, которого нет в базе данных
 # Ожидаемый ответ: 404 Not Found
-GET http://localhost:8080/api/cards/nonexistent
+GET http://localhost:8081/api/cards/nonexistent
 Accept: application/json
 
 ###
 
 ### Создание новой медицинской карты
 # Ожидаемый ответ: 200 OK, созданный объект MedCard в формате JSON
-POST http://localhost:8080/api/cards
+POST http://localhost:8081/api/cards
 Content-Type: application/json
 Accept: application/json
 
@@ -43,7 +43,7 @@ Accept: application/json
 ### Обновление медицинской карты
 # Замените card1 на действительный ID медицинской карты
 # Ожидаемый ответ: 200 OK, обновленный объект MedCard в формате JSON
-PUT http://localhost:8080/api/cards/card1
+PUT http://localhost:8081/api/cards/card1
 Content-Type: application/json
 Accept: application/json
 
@@ -57,15 +57,15 @@ Accept: application/json
 
 ### Получение всех питомцев
 # Ожидаемый ответ: 200 OK, список всех Pet в формате JSON
-GET http://localhost:8080/api/pets/all
-Accept: application/jso
+GET http://localhost:8081/api/pets/all
+Accept: application/json
 
 ###
 
 ### Получение питомца по ID (существующий ID)
 # Замените pet1 на действительный ID питомца из вашей базы данных
 # Ожидаемый ответ: 200 OK, объект Pet в формате JSON
-GET http://localhost:8080/api/pets/pet1
+GET http://localhost:8081/api/pets/pet1
 Accept: application/json
 
 ###
@@ -73,14 +73,14 @@ Accept: application/json
 ### Получение питомца по ID (несуществующий ID)
 # Замените nonexistent на ID, которого нет в базе данных
 # Ожидаемый ответ: 404 Not Found
-GET http://localhost:8080/api/pets/nonexistent
+GET http://localhost:8081/api/pets/nonexistent
 Accept: application/json
 
 ###
 
 ### Создание нового питомца
 # Ожидаемый ответ: 200 OK, созданный объект Pet в формате JSON
-POST http://localhost:8080/api/pets
+POST http://localhost:8081/api/pets
 Content-Type: application/json
 Accept: application/json
 
@@ -97,7 +97,7 @@ Accept: application/json
 ### Обновление питомца
 # Замените pet1 на действительный ID питомца
 # Ожидаемый ответ: 200 OK, обновленный объект Pet в формате JSON
-PUT http://localhost:8080/api/pets/pet1
+PUT http://localhost:8081/api/pets/pet2
 Content-Type: application/json
 Accept: application/json
 
@@ -114,5 +114,5 @@ Accept: application/json
 ### Удаление питомца
 # Замените pet1 на действительный ID питомца
 # Ожидаемый ответ: 204 No Content
-DELETE http://localhost:8080/api/pets/pet1
+DELETE http://localhost:8081/api/pets/pet1
 Accept: application/json

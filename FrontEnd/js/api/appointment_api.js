@@ -50,7 +50,7 @@ export async function getAvailableSlotsByDate(dateString) {
              }
         });
 
-        if (response.status === 404) {
+        if (response.status === 204) {
             console.warn(`Нет доступных слотов на дату ${dateString}`);
             return [];
         }

@@ -323,15 +323,16 @@ async function handleSaveChanges() {
 
     try {
         const updatedMedicalCard = {
-            vaccinations: Array.from(document.querySelectorAll('#vaccinationsEditContainer .vaccination-item')).map(item => ({
-                type: item.querySelector('.vaccination-type').value.trim(),
-                date: item.querySelector('.vaccination-date').value
+            vaccinations: Array.from(document.querySelectorAll('#vaccinationsEditContainer .vaccination-item')).map(vaccItem => ({
+                type: vaccItem.querySelector('.vaccination-type').value.trim(),
+                date: vaccItem.querySelector('.vaccination-date').value
             })).filter(v => v.type || v.date),
             allergies: document.getElementById('allergiesEdit').value.split(',')
-                         .map(item => item.trim()).filter(item => item !== ''),
+                .map(allergyItem => allergyItem.trim()).filter(a => a !== ''),
             diseases: document.getElementById('diseasesEdit').value.split(',')
-                        .map(item => item.trim()).filter(item !== '')
+                .map(diseaseItem => diseaseItem.trim()).filter(d => d !== '')
         };
+
 
         await updateMedicalCard(currentPetId, updatedMedicalCard);
 
