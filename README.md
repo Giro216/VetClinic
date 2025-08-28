@@ -65,7 +65,7 @@ flowchart LR
 
 ### Локальный запуск (без контейнеров)
 1. Установите Java 21+, Node.js
-2. Запустите backend сервисы: Appointments, Profile, Recommendation из соответствующих директорий, предварительно вернув зависимость к их ```compose.yaml``` в ```applicaction.properties```
+2. Запустите backend сервисы: Appointments, Profile, Recommendation из соответствующих директорий, предварительно вернув зависимости в ```applicaction.properties```
 3. Запустите frontend:
     ``` bash
     cd FrontEnd
